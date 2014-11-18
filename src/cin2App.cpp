@@ -9,6 +9,7 @@
 #include "PolyLineProcessor.h"
 #include "Model.h"
 #include "Classifier.h"
+#include "ClassifierNNBattery.h"
 
 #define SAMPLE_SIZE 10
 using namespace ci;
@@ -40,7 +41,7 @@ class cin2App : public AppNative {
 	vector<Model*> trainingModel;
 
 	FileManager fileManager;
-	Classifier classifier;
+	Classifier * classifier;
 
 	bool pressed = false;
 
@@ -54,6 +55,7 @@ void cin2App::setup()
 	AppRenderer * polyLineRenderer2 = new PolyLineRenderer();
 	AppRenderer * polyLineRenderer3 = new PolyLineRenderer();
 
+	classifier = new ClassifierNNBattery(SAMPLE_SIZE);
 
 	inputModel = new Model();
 	processedModel = new Model();
@@ -126,7 +128,7 @@ void cin2App::keyDown(KeyEvent event)
 		testClassifier(0.15);
 		break;
 	case 'c':
-		classifier.classifyBattery(inputModel);
+		classifier->classify(inputModel);
 //		clearModels();		
 		break;
 	}
@@ -143,20 +145,20 @@ void cin2App::getTrainingDataFromFile() {
 	vector<Model*> * temp = fileManager.getDigitsFromJSONFile(fileName);
 	trainingModel.insert(trainingModel.end(), temp->begin(), temp->end());
 
-	
-	//for (int i = 0; i < 10; i++) {
-	//	stringstream ss;
-	//	std::string fileName;
+	fileManager.setFlippedInput(true);
+	for (int i = 0; i < 10; i++) {
+		stringstream ss;
+		std::string fileName;
 
-	//	ss << "digit_" << i << ".json";
-	//	ss >> fileName;
+		ss << "digit_" << i << ".json";
+		ss >> fileName;
 
 
-	//	vector<Model*> * temp = fileManager.getDigitsFromJSONFile(fileName);
-	//	trainingModel.insert(trainingModel.end(), temp->begin(), temp->end());
-	//}
+		vector<Model*> * temp = fileManager.getDigitsFromJSONFile(fileName);
+		trainingModel.insert(trainingModel.end(), temp->begin(), temp->end());
+	}
 
-	classifier.prepareTrainingData(&trainingModel, SAMPLE_SIZE);
+	classifier->prepareTrainingData(&trainingModel);
 
 }
 
@@ -164,14 +166,14 @@ void cin2App::trainClassifier()
 {
 	getTrainingDataFromFile();
 //	classifier.train();
-	classifier.trainBattery();
+	classifier->train();
 }
 
 void cin2App::testClassifier(float ratio)
 {
 	getTrainingDataFromFile();
 	//	classifier.train();
-	classifier.testBattery(ratio);
+	classifier->test(ratio);
 }
 
 void cin2App::mouseDown( MouseEvent event )
@@ -208,7 +210,7 @@ void cin2App::mouseDrag(MouseEvent event)
 		anglesModel->popEntity();
 	}
 	delete processedEntity;
-	processedModel = classifier.GetPreprocessedModel(inputModel, SAMPLE_SIZE);
+	processedModel = classifier->GetPreprocessedModel(inputModel);
 	windows.at(1)->setModel(processedModel);
 	anglesModel->addEntity(anglesEntity);
 	pressed = false;

@@ -5,16 +5,15 @@ using namespace ci;
 
 void AppWindow::addRenderer(AppRenderer * renderer)
 {
-	renderer->setModel(model);
 	renderer->setTransform(*transform);
 	renderers.push_back(renderer);
 }
 
 void AppWindow::setModel(Model *aModel)
 {
-	for (std::vector<AppRenderer*>::iterator it = renderers.begin(); it != renderers.end(); ++it) {
-		(*it)->setModel(aModel);
-	}
+	//for (std::vector<AppRenderer*>::iterator it = renderers.begin(); it != renderers.end(); ++it) {
+	//	(*it)->setModel(aModel);
+	//}
 	model = aModel;
 }
 
@@ -74,7 +73,7 @@ void AppWindow::draw()
 	gl::drawSolidRect(Rectf(rect.x1, rect.y1, rect.x2, rect.y2));
 
 	for (std::vector<AppRenderer*>::iterator it = renderers.begin(); it != renderers.end(); ++it) {
-		(*it)->draw();
+		(*it)->draw(model);
 	}
 		
 

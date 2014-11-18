@@ -13,16 +13,11 @@ void AppRenderer::setTransform(Matrix33f aTransform)
 	transform = aTransform;
 }
 
-void AppRenderer::setModel(Model *aModel)
-{
-	model = aModel;
-}
-
 AppRenderer::~AppRenderer()
 {
 }
 
-void AppRenderer::draw() {
+void AppRenderer::draw(Model* model) {
 	if (model->getDigit() != ' ') {
 
 		std::ostringstream oss(2);

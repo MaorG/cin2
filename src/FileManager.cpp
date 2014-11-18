@@ -176,10 +176,6 @@ PolyLineEntity * FileManager::parsePolyLineEntity(istringstream &iss)
 	*/
 }
 
-FileManager::FileManager()
-{
-}
-
 FileManager::~FileManager()
 {
 	closeBank();
@@ -348,8 +344,13 @@ Entity* FileManager::getSingleEntityFromJSONValue(Json::Value value)
 
 	for (int index = 0; index < JsonCoordinates.size(); index+=2) {
 		float coordinateX = JsonCoordinates[index].asFloat();
-//		float coordinateY = 1.0 - JsonCoordinates[index + 1].asFloat();
-		float coordinateY = JsonCoordinates[index + 1].asFloat();
+		float coordinateY;
+		if (flippedInput){
+			coordinateY = 1.0 - JsonCoordinates[index + 1].asFloat();
+		}
+		else {
+			coordinateY = JsonCoordinates[index + 1].asFloat();
+		}
 		path->appendPoint(Vec2f(coordinateX, coordinateY));
 	}
 

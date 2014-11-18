@@ -1,4 +1,4 @@
-#include "Classifier.h"
+#include "ClassifierNNBattery.h"
 #include "PolyLineEntity.h"
 #include "PolyLineProcessor.h"
 #include "floatfann.h"
@@ -12,7 +12,7 @@
 using namespace ci;
 using namespace std;
 
-Model* Classifier::GetPreprocessedModel(Model *model, int sampleSize) {
+Model* ClassifierNNBattery::GetPreprocessedModel(Model *model) {
 	Model * processedModel = new Model();
 	 
 	std::vector<Entity*> * entities = model->getEntities();
@@ -28,7 +28,7 @@ Model* Classifier::GetPreprocessedModel(Model *model, int sampleSize) {
 			PolyLineProcessor::chainPolyLines(first, polyLineEntity);
 		}
 	}
-	PolyLineEntity* result = PolyLineProcessor::process1(first, true, sampleSize);
+	PolyLineEntity* result = PolyLineProcessor::process1(first, true, m_sampleSize);
 	delete first;
 	processedModel->addEntity(result);
 	return processedModel;
@@ -37,13 +37,13 @@ Model* Classifier::GetPreprocessedModel(Model *model, int sampleSize) {
 	
 }
 
-std::vector <float> Classifier::convertEntityToInputVector(Entity * entity, int sampleSize)
+std::vector <float> ClassifierNNBattery::convertEntityToInputVector(Entity * entity)
 {
 	std::vector <float> inputVector = std::vector <float>();
 
 	//processing polyLine
 	if (entity->isPolyLineEntity()) {
-		PolyLineEntity * resampledEntity = PolyLineProcessor::process1((PolyLineEntity*)entity, true, sampleSize + 1);
+		PolyLineEntity * resampledEntity = PolyLineProcessor::process1((PolyLineEntity*)entity, true, m_sampleSize + 1);
 
 		if (PolyLineProcessor::isPolylineClosed(resampledEntity)) {
 			int a = 0;
@@ -66,34 +66,29 @@ std::vector <float> Classifier::convertEntityToInputVector(Entity * entity, int 
 	return inputVector;
 }
 
-std::vector <float> Classifier::convertModelToInputVector(Model * model, int sampleSize)
+std::vector <float> ClassifierNNBattery::convertModelToInputVector(Model * model)
 {
 	std::vector <float> inputVector = std::vector <float>();
 	if (model->size() > 0){
-
-
-
-		inputVector = convertEntityToInputVector(model->getEntityByIndex(0), sampleSize);
+		inputVector = convertEntityToInputVector(model->getEntityByIndex(0));
 	}
 	return inputVector;
 }
 
-void Classifier::prepareTrainingData(std::vector<Model*> * inputModels, int sampleSize)
+void ClassifierNNBattery::prepareTrainingData(std::vector<Model*> * inputModels)
 {
-	setSampleSize(sampleSize);
-	setInputVectorSize((convertModelToInputVector(*(inputModels->begin()), sampleSize)).size());
+	setInputVectorSize((convertModelToInputVector(*(inputModels->begin()))).size());
 
 	unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
 	shuffle(inputModels->begin(), inputModels->end(), std::default_random_engine(seed));
 
 	for (std::vector<Model*>::iterator it = inputModels->begin(); it != inputModels->end(); it++) {
-		Model * processedModel = GetPreprocessedModel(*it, m_sampleSize);
-		std::vector <float> inputVector = convertModelToInputVector(processedModel, m_sampleSize);
+		Model * processedModel = GetPreprocessedModel(*it);
+		std::vector <float> inputVector = convertModelToInputVector(processedModel);
 		delete processedModel;
 
 		trainingInput.push_back(inputVector);
-
-
+		
 		int outputValue = (*it)->getDigit() - '0';
 
 		std::vector<float> outputVector;
@@ -105,99 +100,7 @@ void Classifier::prepareTrainingData(std::vector<Model*> * inputModels, int samp
 	}
 }
 
-//void Classifier::createTrainingDataFromVectors(int sampleSize)
-//{
-//setInputVectorSize
-//
-//}
-
-//void Classifier::createTrainingDataFromOneVector(int sampleSize)
-//{
-//setInputVectorSize
-//
-//}
-
-void Classifier::train()
-{
-	//struct fann* 
-	//ann = fann_create_sparse(0.5, 4, inputVectorSize, 10, 10, 10);
-	ann = fann_create_standard(4, m_inputVectorSize, 10, 10, 10);
-	struct fann_train_data ftd;
-
-
-	// todo; move to an aux func
-	fann_type **inputArray;
-	inputArray = (float**)malloc(trainingInput.size() *sizeof(float *));
-	for (int i = 0; i < trainingInput.size(); i++) {
-		inputArray[i] = (float*)malloc(m_inputVectorSize * sizeof(float));
-	}
-
-	fann_type **outputArray;
-	outputArray = (float**)malloc(trainingOutput.size() *sizeof(float *));
-	for (int i = 0; i < trainingOutput.size(); i++) {
-		outputArray[i] = (float*)malloc(10 * sizeof(float));
-	}
-
-	for (int i = 0; i < trainingInput.size(); i++) {
-		for (int ip = 0; ip < m_inputVectorSize; ip++) {
-			inputArray[i][ip] = trainingInput[i][ip];
-		}
-		for (int id = 0; id < 10; id++) {
-			outputArray[i][id] = trainingOutput[i][id];
-		}
-	}
-
-	ftd.num_data = trainingInput.size();
-	ftd.num_input = m_inputVectorSize;
-	ftd.num_output = 10;
-	ftd.input = inputArray;
-	ftd.output = outputArray;
-
-
-	fann_set_activation_function_hidden(ann, FANN_SIGMOID_SYMMETRIC);
-	//fann_set_activation_function_hidden(ann, FANN_LINEAR);
-
-	fann_train_on_data(ann, &ftd, 1000, 10, 0.02);
-
-	printf("Mean Square Error: %f\n", fann_get_MSE(ann));
-	
-}
-
-void Classifier::classify(Model * model) {
-
-	if (ann == NULL) {
-		return;
-	}
-	std::vector <float> inputVector = convertModelToInputVector(model , m_sampleSize);
-	std::vector <float> outputVector = std::vector <float>(10);
-	// todo; move to an aux func
-	fann_type *inputArray;
-	inputArray = (float*)malloc(inputVector.size() *sizeof(float));
-	for (int i = 0; i < inputVector.size(); i++) {
-		inputArray[i] = inputVector.at(i);
-	}
-
-	fann_type *outputArray;
-	outputArray = (float*)malloc(outputVector.size() *sizeof(float));
-	for (int i = 0; i < outputVector.size(); i++) {
-		outputArray[i] = 0;
-	}
-
-
-	outputArray = fann_run(ann, inputArray);
-	int output = -1;
-	float max = -10;
-	for (int i = 0; i < outputVector.size(); i++) {
-		if (outputArray[i] > max) {
-			max = outputArray[i];
-			output = i;
-		}
-	}
-
-	model->setDigit('0' + output);
-}
-
-void Classifier::prepareNNBattery()
+void ClassifierNNBattery::prepareNNBattery()
 {
 	fannBattery.clear();
 
@@ -206,12 +109,11 @@ void Classifier::prepareNNBattery()
 		ann = fann_create_standard(4, m_inputVectorSize, 7, 5, 1);
 		fann_set_activation_function_hidden(ann, FANN_SIGMOID_SYMMETRIC);
 //		fann_set_activation_function_hidden(ann, FANN_LINEAR);
-	
 		fannBattery.push_back(ann);
 	}
 }
 
-fann_type ** Classifier::convertTrainingInputToVectors()
+fann_type ** ClassifierNNBattery::convertTrainingInputToVectors()
 {
 	fann_type **inputArray = (float**)malloc(trainingInput.size() *sizeof(float *));
 	for (int i = 0; i < trainingInput.size(); i++) {
@@ -226,7 +128,7 @@ fann_type ** Classifier::convertTrainingInputToVectors()
 	return inputArray;
 }
 
-fann_type ** Classifier::convertTrainingOutputToVectors(int digitIndex)
+fann_type ** ClassifierNNBattery::convertTrainingOutputToVectors(int digitIndex)
 {
 	fann_type ** outputArray = (float**)malloc(trainingOutput.size() *sizeof(float *));
 	for (int i = 0; i < trainingOutput.size(); i++) {
@@ -245,12 +147,12 @@ fann_type ** Classifier::convertTrainingOutputToVectors(int digitIndex)
 
 
 
-void Classifier::trainBattery()
+void ClassifierNNBattery::train()
 {
-	testBattery(0);
+	test(0);
 }
 
-void Classifier::testBattery(float ratio)
+void ClassifierNNBattery::test(float ratio)
 {
 
 	prepareNNBattery();
@@ -269,7 +171,6 @@ void Classifier::testBattery(float ratio)
 
 
 	for (int digitIndex = 0; digitIndex < 10; digitIndex++) {
-//		ftd.num_data = trainingInput.size();
 		ftd.num_data = trainingAmount;
 		ftd.num_input = m_inputVectorSize;
 		ftd.num_output = 1;
@@ -345,21 +246,23 @@ void Classifier::testBattery(float ratio)
 		ci::app::console() << endl;
 	}
 
-
+	ci::app::console() << " ____ ";
 	float rate = (float)amountCorrect / (float)amountTotal;
 	ci::app::console() << endl;
 //	ci::app::console() << " total: " << rate;
-	ci::app::console() << " ____ ";
-
 
 }
 
-void Classifier::classifyBattery(Model * model) {
+void ClassifierNNBattery::classify(Model * model) {
+	classifyBattery(model);
+}
+
+void ClassifierNNBattery::classifyBattery(Model * model) {
 
 	if (fannBattery.size() < 10) {
 		return;
 	}
-	std::vector <float> inputVector = convertModelToInputVector(model, m_sampleSize);
+	std::vector <float> inputVector = convertModelToInputVector(model);
 	std::vector <float> outputVector = std::vector <float>(10);
 	// todo; move to an aux func
 	fann_type *inputArray;

@@ -24,13 +24,17 @@ protected:
 	void closeBank();
 	std::fstream f;
 	int locationInFile;
+	bool flippedInput;
 
 public:
+
+	void setFlippedInput(bool aFlippedInput) { flippedInput = aFlippedInput; };
 	std::vector<Model*>* getDigitsFromJSONFile(std::string filename);
 	void setBank(std::string name);
 	void writeToBank(Model *model);
 	Model * pullFromBank();
-	FileManager();
+	FileManager() :
+		flippedInput(false) {};
 	~FileManager();
 
 	void writeDigitToJSONFile(Model* model, std::string filename);

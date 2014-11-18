@@ -14,15 +14,12 @@ using namespace std;
 class AppRenderer {
 protected:
 	void drawPolyLineEntity(PolyLineEntity * polyLineEntity);
-	Model *model;
 	Matrix33f transform;
 public:
 	AppRenderer();
 	~AppRenderer();
-
-	void setModel(Model *aModel);
 	void setTransform(Matrix33f aTransform);
-	virtual void draw();
+	virtual void draw(Model * model);
 
 
 };
