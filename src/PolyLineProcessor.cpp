@@ -78,7 +78,7 @@ void PolyLineProcessor::reverse(PolyLineEntity* polyLineEntity)
 }
 
 
-PolyLineEntity * PolyLineProcessor::process1(PolyLineEntity* polyLineEntity, bool relative, int segments)
+PolyLineEntity * PolyLineProcessor::prepareForNN(PolyLineEntity* polyLineEntity, bool relative, int segments)
 {
 	PolyLineEntity * proecessedPolyLineEntity = new PolyLineEntity();
 

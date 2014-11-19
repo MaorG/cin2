@@ -8,6 +8,9 @@ protected:
 	char digit;
 public:
 
+	virtual ci::Rectf getBoundingBox() = 0;
+	virtual void scaleFromCenter(ci::Vec2f scale, ci::Vec2f center) = 0;
+	virtual void move(ci::Vec2f movement) = 0;
 	char getDigit() { return digit; };
 	void setDigit(char aDigit) { digit = aDigit; };
 

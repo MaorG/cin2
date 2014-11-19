@@ -108,6 +108,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\Classifier.cpp" />
+    <ClCompile Include="..\src\ClassifierMinDist.cpp" />
     <ClCompile Include="..\src\ClassifierNNBattery.cpp" />
     <ClCompile Include="..\src\FileManager.cpp" />
     <ClCompile Include="..\src\Model.cpp" />
@@ -122,6 +123,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\Classifier.h" />
+    <ClInclude Include="..\include\ClassifierMinDist.h" />
     <ClInclude Include="..\include\ClassifierNNBattery.h" />
     <ClInclude Include="..\include\common.h" />
     <ClInclude Include="..\include\FileManager.h" />

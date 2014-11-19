@@ -10,6 +10,9 @@
 #include "Model.h"
 #include "Classifier.h"
 #include "ClassifierNNBattery.h"
+#include "ClassifierMinDist.h"
+
+// todo - classifiersManager, /w factory etc.
 
 #define SAMPLE_SIZE 10
 using namespace ci;
@@ -31,17 +34,21 @@ class cin2App : public AppNative {
 	void addToFile(Model * model);
 	void trainClassifier();
 	void testClassifier(float ratio);
+	void classifyModel(Model* model);
+
 	void getTrainingDataFromFile();
 
 	vector<AppWindow*> windows;
 	Model *inputModel;
 	Model *processedModel;
 	Model *anglesModel;
+	Model *minDistModel;
 
 	vector<Model*> trainingModel;
+	vector<Model*> distanceModel;
 
 	FileManager fileManager;
-	Classifier * classifier;
+	Classifier* classifiers[2];
 
 	bool pressed = false;
 
@@ -54,8 +61,10 @@ void cin2App::setup()
 	AppRenderer * polyLineRenderer1 = new PolyLineRenderer();
 	AppRenderer * polyLineRenderer2 = new PolyLineRenderer();
 	AppRenderer * polyLineRenderer3 = new PolyLineRenderer();
+	AppRenderer * polyLineRenderer4 = new PolyLineRenderer();
 
-	classifier = new ClassifierNNBattery(SAMPLE_SIZE);
+	classifiers[0] = new ClassifierNNBattery(SAMPLE_SIZE);
+	classifiers[1] = new ClassifierMinDist();
 
 	inputModel = new Model();
 	processedModel = new Model();
@@ -78,6 +87,12 @@ void cin2App::setup()
 	window3->setRect(Rectf(420, 0, 620, 200));
 	window3->addRenderer(polyLineRenderer3);
 	windows.push_back(window3);
+
+	AppWindow * window4 = new AppWindow();
+	window3->setModel(anglesModel);
+	window3->setRect(Rectf(210, 210, 410, 410));
+	window3->addRenderer(polyLineRenderer4);
+	windows.push_back(window4);
 
 }
 
@@ -109,7 +124,7 @@ void cin2App::keyDown(KeyEvent event)
 				std::vector<Entity*> *entities = inputModel->getEntities();
 				for (std::vector<Entity*>::iterator it = entities->begin(); it != entities->end(); it++) {
 					if ((*it)->isPolyLineEntity()) {
-						PolyLineEntity* processedEntity = PolyLineProcessor::process1((PolyLineEntity*)*it, true, SAMPLE_SIZE);
+						PolyLineEntity* processedEntity = PolyLineProcessor::prepareForNN((PolyLineEntity*)*it, true, SAMPLE_SIZE);
 						processedModel->addEntity(processedEntity);
 						PolyLineEntity* anglesEntity = PolyLineProcessor::process2(processedEntity);
 						anglesModel->addEntity(anglesEntity);
@@ -128,10 +143,15 @@ void cin2App::keyDown(KeyEvent event)
 		testClassifier(0.15);
 		break;
 	case 'c':
-		classifier->classify(inputModel);
-//		clearModels();		
+		classifyModel(inputModel);
+		//		clearModels();		
 		break;
 	}
+}
+
+void cin2App::classifyModel(Model* model) {
+	//classifiers[0]->classify(model);
+	classifiers[1]->classify(model);
 }
 
 void cin2App::getTrainingDataFromFile() {
@@ -156,24 +176,27 @@ void cin2App::getTrainingDataFromFile() {
 
 		vector<Model*> * temp = fileManager.getDigitsFromJSONFile(fileName);
 		trainingModel.insert(trainingModel.end(), temp->begin(), temp->end());
+		distanceModel.push_back(*temp->begin());
 	}
 
-	classifier->prepareTrainingData(&trainingModel);
+	//classifiers[0]->prepareTrainingData(&trainingModel);
+	classifiers[1]->prepareTrainingData(&distanceModel);
 
 }
 
 void cin2App::trainClassifier()
 {
+	// todo - this should be more genereal. 
+	// getTrainingData should be a memeber of ClassofierNNBattery
 	getTrainingDataFromFile();
-//	classifier.train();
-	classifier->train();
+	///classifiers[0]->train();
 }
 
 void cin2App::testClassifier(float ratio)
 {
 	getTrainingDataFromFile();
 	//	classifier.train();
-	classifier->test(ratio);
+	//classifiers[0]->test(ratio);
 }
 
 void cin2App::mouseDown( MouseEvent event )
@@ -201,8 +224,8 @@ void cin2App::mouseDrag(MouseEvent event)
 	// todo: give this a name, put in in a function with a parameter function. probabaly there's a pattern for this
 	PolyLineEntity* Last = (PolyLineEntity*)(inputModel->getEntityByIndex(inputModel->size() - 1));
 
-	PolyLineEntity* processedEntity = PolyLineProcessor::process1(Last, true, SAMPLE_SIZE);
-//	PolyLineEntity* processedEntity2 = PolyLineProcessor::process1(processedEntity, true, SAMPLE_SIZE);
+	PolyLineEntity* processedEntity = PolyLineProcessor::prepareForNN(Last, true, SAMPLE_SIZE);
+//	PolyLineEntity* processedEntity2 = PolyLineProcessor::prepareForNN(processedEntity, true, SAMPLE_SIZE);
 	PolyLineEntity* anglesEntity = PolyLineProcessor::process2(processedEntity);
 
 	if (!pressed) {
@@ -210,8 +233,9 @@ void cin2App::mouseDrag(MouseEvent event)
 		anglesModel->popEntity();
 	}
 	delete processedEntity;
-	processedModel = classifier->GetPreprocessedModel(inputModel);
+	processedModel = classifiers[0]->GetPreprocessedModel(inputModel);
 	windows.at(1)->setModel(processedModel);
+	windows.at(3)->setModel(processedModel);
 	anglesModel->addEntity(anglesEntity);
 	pressed = false;
 	

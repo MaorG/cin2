@@ -13,13 +13,12 @@ using namespace ci;
 using namespace std;
 
 Model* ClassifierNNBattery::GetPreprocessedModel(Model *model) {
+
 	Model * processedModel = new Model();
 	 
 	std::vector<Entity*> * entities = model->getEntities();
 
-	//isPolyLineEntity
 	PolyLineEntity* first = ((PolyLineEntity*)*(entities->begin()))->clone();
-	
 	
 	for (std::vector<Entity*>::iterator it = entities->begin()+1; it != entities->end(); ++it) {
 
@@ -28,7 +27,13 @@ Model* ClassifierNNBattery::GetPreprocessedModel(Model *model) {
 			PolyLineProcessor::chainPolyLines(first, polyLineEntity);
 		}
 	}
-	PolyLineEntity* result = PolyLineProcessor::process1(first, true, m_sampleSize);
+
+	processedModel->addEntity(first);
+	processedModel->normalizeBoundingBox();
+	first = (PolyLineEntity*)processedModel->getEntityByIndex(0);
+	processedModel->popEntity();
+
+	PolyLineEntity* result = PolyLineProcessor::prepareForNN(first, true, m_sampleSize);
 	delete first;
 	processedModel->addEntity(result);
 	return processedModel;
@@ -43,7 +48,7 @@ std::vector <float> ClassifierNNBattery::convertEntityToInputVector(Entity * ent
 
 	//processing polyLine
 	if (entity->isPolyLineEntity()) {
-		PolyLineEntity * resampledEntity = PolyLineProcessor::process1((PolyLineEntity*)entity, true, m_sampleSize + 1);
+		PolyLineEntity * resampledEntity = PolyLineProcessor::prepareForNN((PolyLineEntity*)entity, true, m_sampleSize + 1);
 
 		if (PolyLineProcessor::isPolylineClosed(resampledEntity)) {
 			int a = 0;
@@ -176,7 +181,7 @@ void ClassifierNNBattery::test(float ratio)
 		ftd.num_output = 1;
 		ftd.input = inputArray;
 		ftd.output = outputArray[digitIndex];
-		fann_train_on_data(fannBattery[digitIndex], &ftd, 100, 10, 0.02);
+		fann_train_on_data(fannBattery[digitIndex], &ftd, 100, 10, 0.001);
 		ci::app::console() << "Mean Square Error: " << digitIndex << ":  "<< fann_get_MSE(fannBattery[digitIndex]) << endl;
 		ci::app::console() << endl;
 	}
@@ -248,9 +253,8 @@ void ClassifierNNBattery::test(float ratio)
 
 	ci::app::console() << " ____ ";
 	float rate = (float)amountCorrect / (float)amountTotal;
+	ci::app::console() << " total: " << rate;
 	ci::app::console() << endl;
-//	ci::app::console() << " total: " << rate;
-
 }
 
 void ClassifierNNBattery::classify(Model * model) {

@@ -9,6 +9,8 @@ protected:
 	char digit;
 public:
 
+	void normalizeBoundingBox();
+	ci::Rectf getBoundingBox();
 	char getDigit() { return digit; };
 	void setDigit(char aDigit) { digit = aDigit; };
 	std::vector<Entity*> *getEntities() { return entities; };

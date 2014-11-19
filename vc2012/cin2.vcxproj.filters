@@ -60,6 +60,9 @@
     <ClCompile Include="..\src\ClassifierNNBattery.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ClassifierMinDist.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\Resources.h">
@@ -99,6 +102,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\ClassifierNNBattery.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\ClassifierMinDist.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

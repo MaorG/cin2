@@ -13,6 +13,22 @@ PolyLineEntity::~PolyLineEntity()
 	delete object;
 }
 
+void PolyLineEntity::move(ci::Vec2f movement)
+{
+	object->offset(movement);
+}
+
+void PolyLineEntity::scaleFromCenter(ci::Vec2f scale, ci::Vec2f center)
+{
+	object->scale(scale, center);
+}
+
+ci::Rectf PolyLineEntity::getBoundingBox()
+{
+	Rectf BB = Rectf(object->getPoints());
+	return BB;
+}
+
 PolyLineEntity * PolyLineEntity::clone() {
 	PolyLineEntity * cloned = new PolyLineEntity();
 	PolyLine2f * clonedObject = new PolyLine2f();

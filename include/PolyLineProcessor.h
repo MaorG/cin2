@@ -13,7 +13,7 @@ public:
 
 	static void chainPolyLines(PolyLineEntity* firstEntity, PolyLineEntity* secondEntity);
 
-	static PolyLineEntity * process1(PolyLineEntity* polyLineEntity, bool relative, int segments);
+	static PolyLineEntity * prepareForNN(PolyLineEntity* polyLineEntity, bool relative, int segments);
 	static PolyLineEntity * process2(PolyLineEntity* polyLineEntity);
 	static ci::PolyLine2f* uniformResample(ci::PolyLine2f* polyLine, int amount);
 	static void reverse(PolyLineEntity* polyLineEntity);

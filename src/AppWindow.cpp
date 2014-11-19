@@ -21,11 +21,6 @@ void AppWindow::setRect(Rectf aRect)
 {
 	rect = aRect;
 
-	//Matrix33f translateToWindow = Matrix33f(
-	//	1, 0, aRect.x1,
-	//	0, 1, aRect.y1,
-	//	0, 0, 1
-	//	);
 	Matrix33f translateToWindow = Matrix33f(
 		1, 0, 0,
 		0, 1, 0,
