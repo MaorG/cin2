@@ -34,6 +34,7 @@ Model* ClassifierMinDist::GetPreprocessedModel(Model *model) {
 	first = (PolyLineEntity*)processedModel->getEntityByIndex(0);
 	processedModel->popEntity();
 
+	processedModel->setDigit(model->getDigit());
 	PolyLineEntity* result = PolyLineProcessor::prepareForNN(first, true, 10);
 	delete first;
 	processedModel->addEntity(result);
@@ -81,7 +82,7 @@ void ClassifierMinDist::classify(Model * model)
 	}
 	model->setDigit(digit);
 
-	return;
+
 	PolyLineEntity* a = (PolyLineEntity*)model->getEntityByIndex(0);
 	PolyLineEntity* b = (PolyLineEntity*)match->getEntityByIndex(0);
 	

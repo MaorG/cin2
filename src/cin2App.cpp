@@ -150,8 +150,8 @@ void cin2App::keyDown(KeyEvent event)
 }
 
 void cin2App::classifyModel(Model* model) {
-	//classifiers[0]->classify(model);
-	classifiers[1]->classify(model);
+	classifiers[0]->classify(model);
+	//classifiers[1]->classify(model);
 }
 
 void cin2App::getTrainingDataFromFile() {
@@ -177,9 +177,10 @@ void cin2App::getTrainingDataFromFile() {
 		vector<Model*> * temp = fileManager.getDigitsFromJSONFile(fileName);
 		trainingModel.insert(trainingModel.end(), temp->begin(), temp->end());
 		distanceModel.push_back(*temp->begin());
+		distanceModel.push_back(*(temp->begin()+1));
 	}
 
-	//classifiers[0]->prepareTrainingData(&trainingModel);
+	classifiers[0]->prepareTrainingData(&trainingModel);
 	classifiers[1]->prepareTrainingData(&distanceModel);
 
 }
@@ -189,14 +190,14 @@ void cin2App::trainClassifier()
 	// todo - this should be more genereal. 
 	// getTrainingData should be a memeber of ClassofierNNBattery
 	getTrainingDataFromFile();
-	///classifiers[0]->train();
+	classifiers[0]->train();
 }
 
 void cin2App::testClassifier(float ratio)
 {
 	getTrainingDataFromFile();
 	//	classifier.train();
-	//classifiers[0]->test(ratio);
+	classifiers[0]->test(ratio);
 }
 
 void cin2App::mouseDown( MouseEvent event )

@@ -181,7 +181,7 @@ void ClassifierNNBattery::test(float ratio)
 		ftd.num_output = 1;
 		ftd.input = inputArray;
 		ftd.output = outputArray[digitIndex];
-		fann_train_on_data(fannBattery[digitIndex], &ftd, 100, 10, 0.001);
+		fann_train_on_data(fannBattery[digitIndex], &ftd, 100, 10, 0.01);
 		ci::app::console() << "Mean Square Error: " << digitIndex << ":  "<< fann_get_MSE(fannBattery[digitIndex]) << endl;
 		ci::app::console() << endl;
 	}
