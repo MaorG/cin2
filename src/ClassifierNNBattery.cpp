@@ -295,3 +295,7 @@ void ClassifierNNBattery::classifyBattery(Model * model) {
 
 	model->setDigit('0' + output);
 }
+
+int classifyBatteryFannTypeArray(fann_type *inputArray) {
+	return 0;
+}

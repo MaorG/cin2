@@ -2,6 +2,10 @@
 #include "common.h"
 #include "Model.h"
 
+
+// todo: use Model* as input/testing, 
+// and vector<float> (or map<key digit, score float >) for output
+// classifierManager will actually classify the Model
 class Classifier
 {
 protected:

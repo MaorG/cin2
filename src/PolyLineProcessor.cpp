@@ -50,12 +50,12 @@ void PolyLineProcessor::chainPolyLines(PolyLineEntity* firstEntity, PolyLineEnti
 	}
 
 	firstEntity->concat(secondEntity);
-	if (reverseFirst) {
-		reverse(firstEntity);
-	}
-	if (reverseSecond) {
-		reverse(secondEntity);
-	}
+	//if (reverseFirst) {
+	//	reverse(firstEntity);
+	//}
+	//if (reverseSecond) {
+	//	reverse(secondEntity);
+	//}
 
 }
 

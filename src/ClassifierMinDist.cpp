@@ -63,7 +63,10 @@ void ClassifierMinDist::test(float ratio)
 
 void ClassifierMinDist::classify(Model * model) 
 {
-	Model * inputModel = GetPreprocessedModel(model);
+	if (trainingModels.size() == 0) {
+		return;
+	}
+	Model * processedInputModel = GetPreprocessedModel(model);
 
 	float minDist = 1000;
 	char digit = '?';
@@ -73,7 +76,7 @@ void ClassifierMinDist::classify(Model * model)
 	Model * match;
 
 	for (std::vector<Model*>::iterator it = trainingModels.begin(); it != trainingModels.end(); it++){
-		float dist = getDistanceBetweenModels(inputModel, *it);
+		float dist = getDistanceBetweenModels(processedInputModel, *it);
 		if (dist < minDist) {
 			minDist = dist;
 			digit = (*it)->getDigit();
@@ -82,11 +85,16 @@ void ClassifierMinDist::classify(Model * model)
 	}
 	model->setDigit(digit);
 
+	// temp!!
 
-	PolyLineEntity* a = (PolyLineEntity*)model->getEntityByIndex(0);
+	model->clear();
+
+	PolyLineEntity* a = (PolyLineEntity*)processedInputModel->getEntityByIndex(0);
 	PolyLineEntity* b = (PolyLineEntity*)match->getEntityByIndex(0);
 	
-	a->concat(b);
+	PolyLineProcessor::chainPolyLines(a, b);
+	model->addEntity(a);
+//	model->addEntity(b);
 
 }
 
@@ -114,6 +122,7 @@ float ClassifierMinDist::getDistanceBetweenModels(Model * first, Model * second)
 
 	if (distSumHH > distSumHT) {
 		PolyLineProcessor::reverse(firstEntity);
+		firstPolyLine = firstEntity->getObject();
 	}
 
 	float lengthFirst = PolyLineProcessor::calcLength(firstPolyLine);
@@ -122,14 +131,13 @@ float ClassifierMinDist::getDistanceBetweenModels(Model * first, Model * second)
 	float totalDist = 0.0f;
 
 	for (float tRel = 0.0f; tRel <= 1.0f; tRel += 0.1) {
-
 		totalDist += (
 			firstPolyLine->getPosition(tRel * lengthFirst) -
 			secondPolyLine->getPosition(tRel * lengthSecond)
 			).length();
 	}
 	// todo - calc area
-	//firstEntity->concat(secondEntity);
+	//first->addEntity(secondEntity);
 	
 	return totalDist;
 }

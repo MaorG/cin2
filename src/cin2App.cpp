@@ -44,8 +44,8 @@ class cin2App : public AppNative {
 	Model *anglesModel;
 	Model *minDistModel;
 
-	vector<Model*> trainingModel;
-	vector<Model*> distanceModel;
+	vector<Model*> trainingModel[2];
+;
 
 	FileManager fileManager;
 	Classifier* classifiers[2];
@@ -117,9 +117,9 @@ void cin2App::keyDown(KeyEvent event)
 	case 'l':
 		clearModels();
 
-		if (trainingModel.size() > index) {
+		if (trainingModel[0].size() > index) {
 
-			inputModel = trainingModel.at(index++);
+			inputModel = trainingModel[1].at(index++);
 			{
 				std::vector<Entity*> *entities = inputModel->getEntities();
 				for (std::vector<Entity*>::iterator it = entities->begin(); it != entities->end(); it++) {
@@ -150,8 +150,8 @@ void cin2App::keyDown(KeyEvent event)
 }
 
 void cin2App::classifyModel(Model* model) {
-	classifiers[0]->classify(model);
-	//classifiers[1]->classify(model);
+	//classifiers[0]->classify(model);
+	classifiers[1]->classify(model);
 }
 
 void cin2App::getTrainingDataFromFile() {
@@ -162,9 +162,9 @@ void cin2App::getTrainingDataFromFile() {
 	ss >> fileName;
 
 
-	vector<Model*> * temp = fileManager.getDigitsFromJSONFile(fileName);
-	trainingModel.insert(trainingModel.end(), temp->begin(), temp->end());
-
+	//vector<Model*> * temp = fileManager.getDigitsFromJSONFile(fileName);
+	//trainingModel[0].insert(trainingModel[0].end(), temp->begin(), temp->end());
+	
 	fileManager.setFlippedInput(true);
 	for (int i = 0; i < 10; i++) {
 		stringstream ss;
@@ -175,28 +175,25 @@ void cin2App::getTrainingDataFromFile() {
 
 
 		vector<Model*> * temp = fileManager.getDigitsFromJSONFile(fileName);
-		trainingModel.insert(trainingModel.end(), temp->begin(), temp->end());
-		distanceModel.push_back(*temp->begin());
-		distanceModel.push_back(*(temp->begin()+1));
+		trainingModel[0].insert(trainingModel[0].end(), temp->begin(), temp->end());
+		trainingModel[1].push_back(*temp->begin());
+		trainingModel[1].push_back(*(temp->begin() + 1));
 	}
-
-	classifiers[0]->prepareTrainingData(&trainingModel);
-	classifiers[1]->prepareTrainingData(&distanceModel);
-
 }
 
 void cin2App::trainClassifier()
 {
-	// todo - this should be more genereal. 
-	// getTrainingData should be a memeber of ClassofierNNBattery
 	getTrainingDataFromFile();
-	classifiers[0]->train();
+	//classifiers[0]->prepareTrainingData(&trainingModel[0]);
+	classifiers[1]->prepareTrainingData(&trainingModel[1]);
+//	classifiers[0]->train();
 }
 
 void cin2App::testClassifier(float ratio)
 {
 	getTrainingDataFromFile();
-	//	classifier.train();
+	classifiers[0]->prepareTrainingData(&trainingModel[0]);
+	classifiers[1]->prepareTrainingData(&trainingModel[1]);
 	classifiers[0]->test(ratio);
 }
 
