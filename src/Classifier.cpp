@@ -2,7 +2,7 @@
 //#include "PolyLineEntity.h"
 //#include "PolyLineProcessor.h"
 //
-//Model* Classifier::GetPreprocessedModel(Model *model) {
+//Model* Classifier::getPreprocessedModel(Model *model) {
 //	Model * processedModel = new Model();
 //
 //	std::vector<Entity*> * entities = model->getEntities();

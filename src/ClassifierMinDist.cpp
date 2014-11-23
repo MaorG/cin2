@@ -12,7 +12,7 @@
 using namespace ci;
 using namespace std;
 
-Model* ClassifierMinDist::GetPreprocessedModel(Model *model) {
+Model* ClassifierMinDist::getPreprocessedModel(Model *model) {
 	Model * processedModel = new Model();
 	 
 	std::vector<Entity*> * entities = model->getEntities();
@@ -35,7 +35,7 @@ Model* ClassifierMinDist::GetPreprocessedModel(Model *model) {
 	processedModel->popEntity();
 
 	processedModel->setDigit(model->getDigit());
-	PolyLineEntity* result = PolyLineProcessor::prepareForNN(first, true, 10);
+	PolyLineEntity* result = PolyLineProcessor::prepareForNN(first, true, sampleSize);
 	delete first;
 	processedModel->addEntity(result);
 	return processedModel;
@@ -45,7 +45,7 @@ void ClassifierMinDist::prepareTrainingData(std::vector<Model*> * inputModels)
 {
 	trainingModels.clear();
 	for (std::vector<Model*>::iterator it = inputModels->begin(); it != inputModels->end(); it++){
-		Model * temp = GetPreprocessedModel(*it);
+		Model * temp = getPreprocessedModel(*it);
 		trainingModels.push_back(temp);
 	}
 }
@@ -61,12 +61,17 @@ void ClassifierMinDist::test(float ratio)
 	ci::app::console() << endl;
 }
 
-void ClassifierMinDist::classify(Model * model) 
+ClassificationResult ClassifierMinDist::classify(Model * model)
 {
+
+	ClassificationResult result = std::vector <float>(10);
+
 	if (trainingModels.size() == 0) {
-		return;
+		return result;
 	}
-	Model * processedInputModel = GetPreprocessedModel(model);
+	Model * processedInputModel = getPreprocessedModel(model);
+
+
 
 	float minDist = 1000;
 	char digit = '?';
@@ -75,25 +80,49 @@ void ClassifierMinDist::classify(Model * model)
 
 	Model * match;
 
+	float minDistances[10];
+	
+	for (int i = 0; i < 10; i++) {
+		minDistances[i] = 1000;
+	}
+
 	for (std::vector<Model*>::iterator it = trainingModels.begin(); it != trainingModels.end(); it++){
 		float dist = getDistanceBetweenModels(processedInputModel, *it);
-		if (dist < minDist) {
-			minDist = dist;
-			digit = (*it)->getDigit();
-			match = (*it);
+		int digitIndex = (*it)->getDigit()-'0';
+		if (dist < minDistances[digitIndex]) {
+			minDistances[digitIndex] = dist;
 		}
 	}
-	model->setDigit(digit);
+
+	// prepare result from minDistances
+	// get minimal dist over all digits
+	for (int i = 0; i < 10; i++) {
+		if (minDist > minDistances[i]) {
+			minDist = minDistances[i];
+		}
+	}
+	if (minDist == 0.0f) {
+		// shouldn't get here
+		return result;
+	}
+	// normalize
+	for (int i = 0; i < 10; i++) {
+		result[i] = minDist / minDistances[i];
+	}
+
+	return result;
+	
+	//model->setDigit(digit);
 
 	// temp!!
 
-	model->clear();
+	//model->clear();
 
-	PolyLineEntity* a = (PolyLineEntity*)processedInputModel->getEntityByIndex(0);
-	PolyLineEntity* b = (PolyLineEntity*)match->getEntityByIndex(0);
-	
-	PolyLineProcessor::chainPolyLines(a, b);
-	model->addEntity(a);
+	//PolyLineEntity* a = (PolyLineEntity*)processedInputModel->getEntityByIndex(0);
+	//PolyLineEntity* b = (PolyLineEntity*)match->getEntityByIndex(0);
+	//
+	//PolyLineProcessor::chainPolyLines(a, b);
+	//model->addEntity(a);
 //	model->addEntity(b);
 
 }

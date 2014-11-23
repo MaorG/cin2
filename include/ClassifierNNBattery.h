@@ -33,7 +33,7 @@ protected:
 	fann_type ** convertTrainingInputToVectors();
 	fann_type ** convertTrainingOutputToVectors(int digitIndex);
 	
-	void classifyBattery(Model * model);
+	ClassificationResult classifyBattery(Model * model);
 	void setInputVectorSize(int inputVectorSize_) { m_inputVectorSize = inputVectorSize_; };
 	void setSampleSize(int sampleSize_) { m_sampleSize = sampleSize_; };
 
@@ -45,11 +45,11 @@ public:
 
 
 	// todo: these belong in another class of classifier
-	Model* GetPreprocessedModel(Model *model);
+	Model* getPreprocessedModel(Model *model);
 	void prepareTrainingData(std::vector<Model*> * inputModels);
 	void train();
 	void test(float ratio);
-	void classify(Model * model);
+	ClassificationResult classify(Model * model);
 
 };
 

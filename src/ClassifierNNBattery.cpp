@@ -12,7 +12,7 @@
 using namespace ci;
 using namespace std;
 
-Model* ClassifierNNBattery::GetPreprocessedModel(Model *model) {
+Model* ClassifierNNBattery::getPreprocessedModel(Model *model) {
 
 	Model * processedModel = new Model();
 	 
@@ -88,7 +88,7 @@ void ClassifierNNBattery::prepareTrainingData(std::vector<Model*> * inputModels)
 	shuffle(inputModels->begin(), inputModels->end(), std::default_random_engine(seed));
 
 	for (std::vector<Model*>::iterator it = inputModels->begin(); it != inputModels->end(); it++) {
-		Model * processedModel = GetPreprocessedModel(*it);
+		Model * processedModel = getPreprocessedModel(*it);
 		std::vector <float> inputVector = convertModelToInputVector(processedModel);
 		delete processedModel;
 
@@ -257,17 +257,19 @@ void ClassifierNNBattery::test(float ratio)
 	ci::app::console() << endl;
 }
 
-void ClassifierNNBattery::classify(Model * model) {
-	classifyBattery(model);
+ClassificationResult ClassifierNNBattery::classify(Model * model) {
+	return classifyBattery(model);
 }
 
-void ClassifierNNBattery::classifyBattery(Model * model) {
+ClassificationResult ClassifierNNBattery::classifyBattery(Model * model) {
+
+	ClassificationResult result = std::vector <float>(10);
 
 	if (fannBattery.size() < 10) {
-		return;
+		return result;
 	}
 	std::vector <float> inputVector = convertModelToInputVector(model);
-	std::vector <float> outputVector = std::vector <float>(10);
+
 	// todo; move to an aux func
 	fann_type *inputArray;
 	inputArray = (float*)malloc(inputVector.size() *sizeof(float));
@@ -280,22 +282,9 @@ void ClassifierNNBattery::classifyBattery(Model * model) {
 
 	for (int digitIndex = 0; digitIndex < 10; digitIndex++) {
 		outputArray = fann_run(fannBattery[digitIndex], inputArray);
-		outputVector[digitIndex] = outputArray[0];
+		result[digitIndex] = outputArray[0];
 	}
 
-	
-	int output = -1;
-	float max = -10;
-	for (int i = 0; i < outputVector.size(); i++) {
-		if (outputVector[i] > max) {
-			max = outputVector[i];
-			output = i;
-		}
-	}
-
-	model->setDigit('0' + output);
+	return result;
 }
 
-int classifyBatteryFannTypeArray(fann_type *inputArray) {
-	return 0;
-}

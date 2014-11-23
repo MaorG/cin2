@@ -13,20 +13,22 @@ class ClassifierMinDist : public Classifier
 protected:
 	std::vector<Model*> trainingModels;
 	float getDistanceBetweenModels(Model * first, Model * second);
+	int sampleSize;
 
 
 public:
 
-	~ClassifierMinDist();
-	ClassifierMinDist(){};
+	ClassifierMinDist(int sampleSize) :
+		sampleSize(sampleSize){};
+	~ClassifierMinDist(){};
 
 
 	// todo: these belong in another class of classifier
-	Model* GetPreprocessedModel(Model *model);
+	Model* getPreprocessedModel(Model *model);
 	void prepareTrainingData(std::vector<Model*> * inputModels);
 	void train();
 	void test(float ratio);
-	void classify(Model * model);
+	ClassificationResult classify(Model * model);
 
 };
 

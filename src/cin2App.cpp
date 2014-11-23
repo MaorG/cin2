@@ -8,13 +8,13 @@
 #include "PolyLineRenderer.h"
 #include "PolyLineProcessor.h"
 #include "Model.h"
-#include "Classifier.h"
-#include "ClassifierNNBattery.h"
-#include "ClassifierMinDist.h"
-
-// todo - classifiersManager, /w factory etc.
+#include "HandWritingManager.h"
+#include <random>       // std::default_random_engine
 
 #define SAMPLE_SIZE 10
+#define TESTING_SIZE 50
+
+
 using namespace ci;
 using namespace ci::app;
 using namespace std;
@@ -44,16 +44,14 @@ class cin2App : public AppNative {
 	Model *anglesModel;
 	Model *minDistModel;
 
-	vector<Model*> trainingModel[2];
-;
-
 	FileManager fileManager;
-	Classifier* classifiers[2];
+	HandWritingManager * handWritingManager;
 
 	bool pressed = false;
 
 	int index = 0;
-
+	vector<Model*> trainingModel[2];
+	vector<Model*> testingModel;
 };
 
 void cin2App::setup()
@@ -63,8 +61,7 @@ void cin2App::setup()
 	AppRenderer * polyLineRenderer3 = new PolyLineRenderer();
 	AppRenderer * polyLineRenderer4 = new PolyLineRenderer();
 
-	classifiers[0] = new ClassifierNNBattery(SAMPLE_SIZE);
-	classifiers[1] = new ClassifierMinDist();
+	handWritingManager = new HandWritingManager(SAMPLE_SIZE);
 
 	inputModel = new Model();
 	processedModel = new Model();
@@ -89,9 +86,9 @@ void cin2App::setup()
 	windows.push_back(window3);
 
 	AppWindow * window4 = new AppWindow();
-	window3->setModel(anglesModel);
-	window3->setRect(Rectf(210, 210, 410, 410));
-	window3->addRenderer(polyLineRenderer4);
+	window4->setModel(anglesModel);
+	window4->setRect(Rectf(210, 210, 410, 410));
+	window4->addRenderer(polyLineRenderer4);
 	windows.push_back(window4);
 
 }
@@ -117,24 +114,24 @@ void cin2App::keyDown(KeyEvent event)
 	case 'l':
 		clearModels();
 
-		if (trainingModel[0].size() > index) {
+		//if (trainingModel[0].size() > index) {
 
-			inputModel = trainingModel[1].at(index++);
-			{
-				std::vector<Entity*> *entities = inputModel->getEntities();
-				for (std::vector<Entity*>::iterator it = entities->begin(); it != entities->end(); it++) {
-					if ((*it)->isPolyLineEntity()) {
-						PolyLineEntity* processedEntity = PolyLineProcessor::prepareForNN((PolyLineEntity*)*it, true, SAMPLE_SIZE);
-						processedModel->addEntity(processedEntity);
-						PolyLineEntity* anglesEntity = PolyLineProcessor::process2(processedEntity);
-						anglesModel->addEntity(anglesEntity);
-					}
-				}
-			}
-		}
-		else {
-			index = 0;
-		}
+		//	inputModel = trainingModel[1].at(index++);
+		//	{
+		//		std::vector<Entity*> *entities = inputModel->getEntities();
+		//		for (std::vector<Entity*>::iterator it = entities->begin(); it != entities->end(); it++) {
+		//			if ((*it)->isPolyLineEntity()) {
+		//				PolyLineEntity* processedEntity = PolyLineProcessor::prepareForNN((PolyLineEntity*)*it, true, SAMPLE_SIZE);
+		//				processedModel->addEntity(processedEntity);
+		//				PolyLineEntity* anglesEntity = PolyLineProcessor::process2(processedEntity);
+		//				anglesModel->addEntity(anglesEntity);
+		//			}
+		//		}
+		//	}
+		//}
+		//else {
+		//	index = 0;
+		//}
 		break;
 	case 't':
 		trainClassifier();
@@ -151,7 +148,8 @@ void cin2App::keyDown(KeyEvent event)
 
 void cin2App::classifyModel(Model* model) {
 	//classifiers[0]->classify(model);
-	classifiers[1]->classify(model);
+	//classifiers[1]->classify(model);
+	handWritingManager->classify(model);
 }
 
 void cin2App::getTrainingDataFromFile() {
@@ -162,9 +160,18 @@ void cin2App::getTrainingDataFromFile() {
 	ss >> fileName;
 
 
-	//vector<Model*> * temp = fileManager.getDigitsFromJSONFile(fileName);
-	//trainingModel[0].insert(trainingModel[0].end(), temp->begin(), temp->end());
+	vector<Model*> * temp = fileManager.getDigitsFromJSONFile(fileName);
+	trainingModel[0].insert(trainingModel[0].end(), temp->begin(), temp->end());
 	
+	unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+	shuffle(trainingModel[0].begin(), trainingModel[0].end(), std::default_random_engine(seed));
+
+	int testingAmount = min(TESTING_SIZE, (int)floor(trainingModel[0].size() * 0.3));
+	for (int i = 0; i < testingAmount; i++) {
+		testingModel.push_back(trainingModel[0].back());
+		trainingModel[0].pop_back();
+	}
+
 	fileManager.setFlippedInput(true);
 	for (int i = 0; i < 10; i++) {
 		stringstream ss;
@@ -176,25 +183,34 @@ void cin2App::getTrainingDataFromFile() {
 
 		vector<Model*> * temp = fileManager.getDigitsFromJSONFile(fileName);
 		trainingModel[0].insert(trainingModel[0].end(), temp->begin(), temp->end());
-		trainingModel[1].push_back(*temp->begin());
-		trainingModel[1].push_back(*(temp->begin() + 1));
+		trainingModel[1].insert(trainingModel[1].end(), temp->begin(), temp->end());
+		//trainingModel[1].push_back(*temp->begin());
+		//trainingModel[1].push_back(*(temp->begin() + 1));
 	}
+
+
+
 }
 
 void cin2App::trainClassifier()
 {
 	getTrainingDataFromFile();
+	handWritingManager->setExampleModels("NN", &trainingModel[0]);
+	handWritingManager->setExampleModels("MinDist", &trainingModel[1]);
 	//classifiers[0]->prepareTrainingData(&trainingModel[0]);
-	classifiers[1]->prepareTrainingData(&trainingModel[1]);
+	//classifiers[1]->prepareTrainingData(&trainingModel[1]);
 //	classifiers[0]->train();
 }
 
 void cin2App::testClassifier(float ratio)
 {
 	getTrainingDataFromFile();
-	classifiers[0]->prepareTrainingData(&trainingModel[0]);
-	classifiers[1]->prepareTrainingData(&trainingModel[1]);
-	classifiers[0]->test(ratio);
+//	classifiers[0]->prepareTrainingData(&trainingModel[0]);
+//	classifiers[1]->prepareTrainingData(&trainingModel[1]);
+	handWritingManager->setExampleModels("NN", &trainingModel[0]);
+	handWritingManager->setExampleModels("MinDist", &trainingModel[1]);
+	handWritingManager->setTestModels(&testingModel);
+	handWritingManager->test();
 }
 
 void cin2App::mouseDown( MouseEvent event )
@@ -231,7 +247,7 @@ void cin2App::mouseDrag(MouseEvent event)
 		anglesModel->popEntity();
 	}
 	delete processedEntity;
-	processedModel = classifiers[0]->GetPreprocessedModel(inputModel);
+	processedModel = handWritingManager->getPreprocessedModel("NN", inputModel);
 	windows.at(1)->setModel(processedModel);
 	windows.at(3)->setModel(processedModel);
 	anglesModel->addEntity(anglesEntity);
