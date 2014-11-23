@@ -12,7 +12,7 @@
 #include <random>       // std::default_random_engine
 
 #define SAMPLE_SIZE 10
-#define TESTING_SIZE 50
+#define TESTING_SIZE 30
 
 
 using namespace ci;

@@ -19,7 +19,11 @@ void PolyLineProcessor::chainPolyLines(PolyLineEntity* firstEntity, PolyLineEnti
 	PolyLine2f * first = firstEntity->getObject();
 	PolyLine2f * second = secondEntity->getObject();
 
-	if (first->size() == 0 || second->size() == 0) {
+//	if (first->size() == 0) {
+//		firstEntity->concat(secondEntity);
+//	}
+		
+	if (second->size() == 0) {
 		return;
 	}
 
