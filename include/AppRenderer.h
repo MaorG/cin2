@@ -19,7 +19,7 @@ public:
 	AppRenderer();
 	~AppRenderer();
 	void setTransform(Matrix33f aTransform);
-	virtual void draw(Model * model);
+	virtual void draw(Matrix33f aTransform, Model * model);
 
 
 };

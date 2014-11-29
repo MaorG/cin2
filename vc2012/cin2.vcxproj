@@ -108,6 +108,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\Classifier.cpp" />
+    <ClCompile Include="..\src\ClassifierDP.cpp" />
     <ClCompile Include="..\src\ClassifierMinDist.cpp" />
     <ClCompile Include="..\src\ClassifierNNBattery.cpp" />
     <ClCompile Include="..\src\FileManager.cpp" />
@@ -121,9 +122,11 @@
     <ClCompile Include="..\src\PolyLineEntity.cpp" />
     <ClCompile Include="..\src\AppRenderer.cpp" />
     <ClCompile Include="..\src\AppWindowInput.cpp" />
+    <ClCompile Include="..\src\SequenceAligner.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\Classifier.h" />
+    <ClInclude Include="..\include\ClassifierDP.h" />
     <ClInclude Include="..\include\ClassifierMinDist.h" />
     <ClInclude Include="..\include\ClassifierNNBattery.h" />
     <ClInclude Include="..\include\common.h" />
@@ -140,6 +143,7 @@
     <ClInclude Include="..\include\PolyLineEntity.h" />
     <ClInclude Include="..\include\AppRenderer.h" />
     <ClInclude Include="..\include\AppWindowInput.h" />
+    <ClInclude Include="..\include\SequenceAligner.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\include.zip" />

@@ -17,7 +17,8 @@ AppRenderer::~AppRenderer()
 {
 }
 
-void AppRenderer::draw(Model* model) {
+void AppRenderer::draw(Matrix33f transform, Model * model) {
+
 	if (model->getDigit() != ' ') {
 
 		std::ostringstream oss(2);

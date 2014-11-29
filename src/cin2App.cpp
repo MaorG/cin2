@@ -12,7 +12,7 @@
 #include <random>       // std::default_random_engine
 
 #define SAMPLE_SIZE 10
-#define TESTING_SIZE 30
+#define TESTING_SIZE 40
 
 
 using namespace ci;
@@ -56,10 +56,7 @@ class cin2App : public AppNative {
 
 void cin2App::setup()
 {
-	AppRenderer * polyLineRenderer1 = new PolyLineRenderer();
-	AppRenderer * polyLineRenderer2 = new PolyLineRenderer();
-	AppRenderer * polyLineRenderer3 = new PolyLineRenderer();
-	AppRenderer * polyLineRenderer4 = new PolyLineRenderer();
+	AppRenderer * polyLineRenderer = new PolyLineRenderer();
 
 	handWritingManager = new HandWritingManager(SAMPLE_SIZE);
 
@@ -70,26 +67,32 @@ void cin2App::setup()
 	AppWindow * window1 = new AppWindowInput();
 	window1->setModel(inputModel);
 	window1->setRect(Rectf(0, 0, 200, 200));
-	window1->addRenderer(polyLineRenderer1);
+	window1->addRenderer(polyLineRenderer);
 	windows.push_back(window1);
 
 	AppWindow * window2 = new AppWindow();
 	window2->setModel(processedModel);
 	window2->setRect(Rectf(210, 0, 410, 200));
-	window2->addRenderer(polyLineRenderer2);
+	window2->addRenderer(polyLineRenderer);
 	windows.push_back(window2);
 
 	AppWindow * window3 = new AppWindow();
 	window3->setModel(anglesModel);
-	window3->setRect(Rectf(420, 0, 620, 200));
-	window3->addRenderer(polyLineRenderer3);
+	window3->setRect(Rectf(0, 210, 200, 410));
+	window3->addRenderer(polyLineRenderer);
 	windows.push_back(window3);
 
 	AppWindow * window4 = new AppWindow();
 	window4->setModel(anglesModel);
 	window4->setRect(Rectf(210, 210, 410, 410));
-	window4->addRenderer(polyLineRenderer4);
+	window4->addRenderer(polyLineRenderer);
 	windows.push_back(window4);
+
+	AppWindow * window5 = new AppWindow();
+	window5->setModel(anglesModel);
+	window5->setRect(Rectf(420, 210, 620, 410));
+	window5->addRenderer(polyLineRenderer);
+	windows.push_back(window5);
 
 }
 
@@ -162,7 +165,7 @@ void cin2App::getTrainingDataFromFile() {
 
 	vector<Model*> * temp = fileManager.getDigitsFromJSONFile(fileName);
 	trainingModel[0].insert(trainingModel[0].end(), temp->begin(), temp->end());
-	
+
 	unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
 	shuffle(trainingModel[0].begin(), trainingModel[0].end(), std::default_random_engine(seed));
 
@@ -172,6 +175,18 @@ void cin2App::getTrainingDataFromFile() {
 		trainingModel[0].pop_back();
 	}
 
+	// just inserting some extra random digits to the dist
+	// todo: make nice
+	trainingModel[1].insert(trainingModel[1].end(), 
+		trainingModel[0].begin(),
+		trainingModel[0].begin() + min(50, (int)floor(temp->size() * 0.3)));
+
+	//trainingModel[1].insert(trainingModel[1].end(),
+	//	trainingModel[0].begin(),
+	//	trainingModel[0].end());
+
+
+	/*
 	fileManager.setFlippedInput(true);
 	for (int i = 0; i < 10; i++) {
 		stringstream ss;
@@ -182,11 +197,11 @@ void cin2App::getTrainingDataFromFile() {
 
 
 		vector<Model*> * temp = fileManager.getDigitsFromJSONFile(fileName);
-		trainingModel[0].insert(trainingModel[0].end(), temp->begin(), temp->end());
+		//trainingModel[0].insert(trainingModel[0].end(), temp->begin(), temp->end());
 		trainingModel[1].insert(trainingModel[1].end(), temp->begin(), temp->end());
-		//trainingModel[1].push_back(*temp->begin());
-		//trainingModel[1].push_back(*(temp->begin() + 1));
+		//trainingModel[1].insert(trainingModel[1].end(), temp->begin(), temp->begin() + 2);
 	}
+	*/
 
 
 
@@ -197,18 +212,15 @@ void cin2App::trainClassifier()
 	getTrainingDataFromFile();
 	handWritingManager->setExampleModels("NN", &trainingModel[0]);
 	handWritingManager->setExampleModels("MinDist", &trainingModel[1]);
-	//classifiers[0]->prepareTrainingData(&trainingModel[0]);
-	//classifiers[1]->prepareTrainingData(&trainingModel[1]);
-//	classifiers[0]->train();
+	handWritingManager->setExampleModels("Dynamic", &trainingModel[1]);
 }
 
 void cin2App::testClassifier(float ratio)
 {
 	getTrainingDataFromFile();
-//	classifiers[0]->prepareTrainingData(&trainingModel[0]);
-//	classifiers[1]->prepareTrainingData(&trainingModel[1]);
 	handWritingManager->setExampleModels("NN", &trainingModel[0]);
 	handWritingManager->setExampleModels("MinDist", &trainingModel[1]);
+	handWritingManager->setExampleModels("Dynamic", &trainingModel[1]);
 	handWritingManager->setTestModels(&testingModel);
 	handWritingManager->test();
 }
@@ -257,11 +269,8 @@ void cin2App::mouseDrag(MouseEvent event)
 
 void cin2App::clearModels() {
 	inputModel->clear();
-//	delete inputModel;
 	processedModel->clear();
-//	delete processedModel;
 	anglesModel->clear();
-//	delete anglesModel;
 }
 
 void cin2App::storeModel(char digit) 

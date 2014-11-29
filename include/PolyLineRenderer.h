@@ -6,6 +6,6 @@ class PolyLineRenderer : public AppRenderer {
 public:
 	PolyLineRenderer();
 	~PolyLineRenderer();
-	void draw(Model * model);
+	void draw(Matrix33f aTransform, Model * model);
 	void drawPolyLineEntity(PolyLineEntity * polyLineEntity);
 };

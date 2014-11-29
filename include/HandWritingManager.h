@@ -4,6 +4,7 @@
 #include "Classifier.h"
 #include "ClassifierNNBattery.h"
 #include "ClassifierMinDist.h"
+#include "ClassifierDP.h"
 #include "string.h"
 
 // todo: use Model* as input/testing, 

@@ -16,10 +16,13 @@ char getDigitFromResult(ClassificationResult result)
 
 HandWritingManager::HandWritingManager(int sampleSize) {
 	ClassifierNNBattery * NNBattery = new ClassifierNNBattery(sampleSize);
-	ClassifierMinDist * minDist = new ClassifierMinDist(sampleSize);
-
 	classifiers["NN"] = NNBattery;
+
+	ClassifierMinDist * minDist = new ClassifierMinDist(sampleSize);
 	classifiers["MinDist"] = minDist;
+
+	ClassifierDP * dynamic = new ClassifierDP(sampleSize);
+	classifiers["Dynamic"] = dynamic;
 }
 
 
@@ -52,13 +55,25 @@ Model* HandWritingManager::getPreprocessedModel(std::string classifierName, Mode
 ClassificationResult HandWritingManager::classifyToResult(Model * model)
 {
 	ClassificationResult result = std::vector <float>(10);
-	ClassificationResult NNresult =
-		classifiers["NN"]->classify(model);
-	ClassificationResult MinDistResult =
-		classifiers["MinDist"]->classify(model);
+	std::vector <ClassificationResult> resultVector;
+
+	for (std::map<std::string, Classifier*>::iterator it = classifiers.begin();
+		it != classifiers.end(); ++it) {
+
+		Classifier * classifier = it->second;
+		ClassificationResult oneResult = classifier->classify(model);
+		resultVector.push_back(oneResult);
+
+	}
 
 	for (int i = 0; i < result.size(); i++) {
-		result[i] = NNresult[i] * MinDistResult[i];
+		result[i] = 0;
+	}
+
+	for (int resultindex = 0; resultindex < resultVector.size(); resultindex++) {
+		for (int i = 0; i < result.size(); i++) {
+			result[i] += (0.5 + resultVector[resultindex][i]);
+		}
 	}
 	return result;
 }
@@ -95,15 +110,19 @@ void printResultMatrix(std::string name, int resultMatrix[10][10]){
 }
 
 void HandWritingManager::test()
+
+// todo - push into vector of classifiers. also - make an output struct
 {
 	int resultMatrix[10][10];
 	int NNResultMatrix[10][10];
 	int minDistResultMatrix[10][10];
+	int dynamicResultMatrix[10][10];
 
 	for (int i = 0; i < 10; i++) {
 		for (int j = 0; j < 10; j++) {
 			resultMatrix[i][j] = 0;
 			NNResultMatrix[i][j] = 0;
+			dynamicResultMatrix[i][j] = 0;
 			minDistResultMatrix[i][j] = 0;
 		}
 	}
@@ -121,6 +140,10 @@ void HandWritingManager::test()
 		finalOutput = getDigitFromResult(result) - '0';
 		minDistResultMatrix[expectedOutput][finalOutput] ++;
 
+		result = classifiers["Dynamic"]->classify(*it);
+		finalOutput = getDigitFromResult(result) - '0';
+		dynamicResultMatrix[expectedOutput][finalOutput] ++;
+
 		result = classifyToResult(*it);
 		finalOutput = getDigitFromResult(result) - '0';
 		resultMatrix[expectedOutput][finalOutput] ++;
@@ -128,6 +151,7 @@ void HandWritingManager::test()
 
 	printResultMatrix("NN", NNResultMatrix);
 	printResultMatrix("MinDist", minDistResultMatrix);
+	printResultMatrix("Dynamic", dynamicResultMatrix);
 	printResultMatrix("Combined", resultMatrix);
 
 }

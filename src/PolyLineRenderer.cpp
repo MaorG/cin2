@@ -11,13 +11,14 @@ PolyLineRenderer::~PolyLineRenderer()
 }
 
 
-void PolyLineRenderer::draw(Model * model) 
+void PolyLineRenderer::draw(Matrix33f transform, Model * model)
 {
 	if (model == nullptr) {
 		return;
 	}
 
-	AppRenderer::draw(model);
+	AppRenderer::draw(transform, model);
+	setTransform(transform);
 
 	unsigned char colorIndex = 1;
 

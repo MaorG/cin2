@@ -110,6 +110,8 @@ ClassificationResult ClassifierMinDist::classify(Model * model)
 		result[i] = minDist / minDistances[i];
 	}
 
+	delete processedInputModel;
+
 	return result;
 	
 	//model->setDigit(digit);
@@ -156,6 +158,8 @@ float ClassifierMinDist::getDistanceBetweenModels(Model * first, Model * second)
 
 	float lengthFirst = PolyLineProcessor::calcLength(firstPolyLine);
 	float lengthSecond = PolyLineProcessor::calcLength(secondPolyLine);
+
+		//  todo - use actual points  (?)
 
 	float totalDist = 0.0f;
 

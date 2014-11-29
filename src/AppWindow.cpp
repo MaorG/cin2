@@ -68,7 +68,7 @@ void AppWindow::draw()
 	gl::drawSolidRect(Rectf(rect.x1, rect.y1, rect.x2, rect.y2));
 
 	for (std::vector<AppRenderer*>::iterator it = renderers.begin(); it != renderers.end(); ++it) {
-		(*it)->draw(model);
+		(*it)->draw(*transform, model);
 	}
 		
 
