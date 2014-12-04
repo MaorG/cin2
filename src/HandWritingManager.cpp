@@ -14,14 +14,17 @@ char getDigitFromResult(ClassificationResult result)
 	return output + '0';
 }
 
-HandWritingManager::HandWritingManager(int sampleSize) {
-	ClassifierNNBattery * NNBattery = new ClassifierNNBattery(sampleSize);
+HandWritingManager::HandWritingManager(AppContext * context, int sampleSize):
+	context(context)
+{
+
+	ClassifierNNBattery * NNBattery = new ClassifierNNBattery(context, sampleSize);
 	classifiers["NN"] = NNBattery;
 
-	ClassifierMinDist * minDist = new ClassifierMinDist(sampleSize);
+	ClassifierMinDist * minDist = new ClassifierMinDist(context, sampleSize);
 	classifiers["MinDist"] = minDist;
 
-	ClassifierDP * dynamic = new ClassifierDP(sampleSize);
+	ClassifierDP * dynamic = new ClassifierDP(context, sampleSize);
 	classifiers["Dynamic"] = dynamic;
 }
 
@@ -52,7 +55,7 @@ Model* HandWritingManager::getPreprocessedModel(std::string classifierName, Mode
 	return classifier->getPreprocessedModel(model);
 }
 
-ClassificationResult HandWritingManager::classifyToResult(Model * model)
+ClassificationResult HandWritingManager::classifyToResult(Model * model, bool preview)
 {
 	ClassificationResult result = std::vector <float>(10);
 	std::vector <ClassificationResult> resultVector;
@@ -61,7 +64,14 @@ ClassificationResult HandWritingManager::classifyToResult(Model * model)
 		it != classifiers.end(); ++it) {
 
 		Classifier * classifier = it->second;
-		ClassificationResult oneResult = classifier->classify(model);
+
+		ClassificationResult oneResult;
+		if (!preview) {
+			oneResult = classifier->classify(model);
+		}
+		else {
+			oneResult = classifier->classifyAndPreview(model);
+		}
 		resultVector.push_back(oneResult);
 
 	}
@@ -78,9 +88,9 @@ ClassificationResult HandWritingManager::classifyToResult(Model * model)
 	return result;
 }
 
-void HandWritingManager::classify(Model * model)
+void HandWritingManager::classify(Model * model, bool preview)
 {
-	ClassificationResult result = classifyToResult(model);
+	ClassificationResult result = classifyToResult(model, preview);
 	model->setDigit(getDigitFromResult(result));
 }
 
@@ -132,9 +142,9 @@ void HandWritingManager::test()
 		int finalOutput;
 		ClassificationResult result;
 
-		result = classifiers["NN"]->classify(*it);
-		finalOutput = getDigitFromResult(result) - '0';
-		NNResultMatrix[expectedOutput][finalOutput] ++;
+//		result = classifiers["NN"]->classify(*it);
+//		finalOutput = getDigitFromResult(result) - '0';
+//		NNResultMatrix[expectedOutput][finalOutput] ++;
 
 		result = classifiers["MinDist"]->classify(*it);
 		finalOutput = getDigitFromResult(result) - '0';
@@ -144,7 +154,7 @@ void HandWritingManager::test()
 		finalOutput = getDigitFromResult(result) - '0';
 		dynamicResultMatrix[expectedOutput][finalOutput] ++;
 
-		result = classifyToResult(*it);
+		result = classifyToResult(*it, false);
 		finalOutput = getDigitFromResult(result) - '0';
 		resultMatrix[expectedOutput][finalOutput] ++;
 	}

@@ -9,6 +9,7 @@
 #include "PolyLineProcessor.h"
 #include "Model.h"
 #include "HandWritingManager.h"
+#include "AppContext.h";
 #include <random>       // std::default_random_engine
 
 #define SAMPLE_SIZE 10
@@ -38,7 +39,9 @@ class cin2App : public AppNative {
 
 	void getTrainingDataFromFile();
 
-	vector<AppWindow*> windows;
+	AppContext * context;
+
+	//vector<AppWindow*> windows;
 	Model *inputModel;
 	Model *processedModel;
 	Model *anglesModel;
@@ -57,8 +60,8 @@ class cin2App : public AppNative {
 void cin2App::setup()
 {
 	AppRenderer * polyLineRenderer = new PolyLineRenderer();
-
-	handWritingManager = new HandWritingManager(SAMPLE_SIZE);
+	context = new AppContext(); //  todo - move renderers to context
+	handWritingManager = new HandWritingManager(context, SAMPLE_SIZE);
 
 	inputModel = new Model();
 	processedModel = new Model();
@@ -68,31 +71,31 @@ void cin2App::setup()
 	window1->setModel(inputModel);
 	window1->setRect(Rectf(0, 0, 200, 200));
 	window1->addRenderer(polyLineRenderer);
-	windows.push_back(window1);
+	context->AddWindow((window1));
 
 	AppWindow * window2 = new AppWindow();
 	window2->setModel(processedModel);
 	window2->setRect(Rectf(210, 0, 410, 200));
 	window2->addRenderer(polyLineRenderer);
-	windows.push_back(window2);
+	context->AddWindow((window2));
 
 	AppWindow * window3 = new AppWindow();
 	window3->setModel(anglesModel);
 	window3->setRect(Rectf(0, 210, 200, 410));
 	window3->addRenderer(polyLineRenderer);
-	windows.push_back(window3);
+	context->AddWindow((window3));
 
 	AppWindow * window4 = new AppWindow();
 	window4->setModel(anglesModel);
 	window4->setRect(Rectf(210, 210, 410, 410));
 	window4->addRenderer(polyLineRenderer);
-	windows.push_back(window4);
+	context->AddWindow((window4));
 
 	AppWindow * window5 = new AppWindow();
 	window5->setModel(anglesModel);
 	window5->setRect(Rectf(420, 210, 620, 410));
 	window5->addRenderer(polyLineRenderer);
-	windows.push_back(window5);
+	context->AddWindow((window5));
 
 }
 
@@ -152,7 +155,7 @@ void cin2App::keyDown(KeyEvent event)
 void cin2App::classifyModel(Model* model) {
 	//classifiers[0]->classify(model);
 	//classifiers[1]->classify(model);
-	handWritingManager->classify(model);
+	handWritingManager->classify(model, true);
 }
 
 void cin2App::getTrainingDataFromFile() {
@@ -162,8 +165,9 @@ void cin2App::getTrainingDataFromFile() {
 	ss << "myDigits.json";
 	ss >> fileName;
 
-
-	vector<Model*> * temp = fileManager.getDigitsFromJSONFile(fileName);
+	vector<Model*> * temp;
+	
+	temp = fileManager.getDigitsFromJSONFile(fileName);
 	trainingModel[0].insert(trainingModel[0].end(), temp->begin(), temp->end());
 
 	unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
@@ -177,16 +181,14 @@ void cin2App::getTrainingDataFromFile() {
 
 	// just inserting some extra random digits to the dist
 	// todo: make nice
-	trainingModel[1].insert(trainingModel[1].end(), 
-		trainingModel[0].begin(),
-		trainingModel[0].begin() + min(50, (int)floor(temp->size() * 0.3)));
+	//trainingModel[1].insert(trainingModel[1].end(), 
+	//	trainingModel[0].begin(),
+	//	trainingModel[0].begin() + min(50, (int)floor(temp->size() * 0.3)));
 
 	//trainingModel[1].insert(trainingModel[1].end(),
 	//	trainingModel[0].begin(),
 	//	trainingModel[0].end());
 
-
-	/*
 	fileManager.setFlippedInput(true);
 	for (int i = 0; i < 10; i++) {
 		stringstream ss;
@@ -201,8 +203,8 @@ void cin2App::getTrainingDataFromFile() {
 		trainingModel[1].insert(trainingModel[1].end(), temp->begin(), temp->end());
 		//trainingModel[1].insert(trainingModel[1].end(), temp->begin(), temp->begin() + 2);
 	}
-	*/
-
+	
+	
 
 
 }
@@ -210,7 +212,7 @@ void cin2App::getTrainingDataFromFile() {
 void cin2App::trainClassifier()
 {
 	getTrainingDataFromFile();
-	handWritingManager->setExampleModels("NN", &trainingModel[0]);
+//	handWritingManager->setExampleModels("NN", &trainingModel[0]);
 	handWritingManager->setExampleModels("MinDist", &trainingModel[1]);
 	handWritingManager->setExampleModels("Dynamic", &trainingModel[1]);
 }
@@ -218,7 +220,7 @@ void cin2App::trainClassifier()
 void cin2App::testClassifier(float ratio)
 {
 	getTrainingDataFromFile();
-	handWritingManager->setExampleModels("NN", &trainingModel[0]);
+//	handWritingManager->setExampleModels("NN", &trainingModel[0]);
 	handWritingManager->setExampleModels("MinDist", &trainingModel[1]);
 	handWritingManager->setExampleModels("Dynamic", &trainingModel[1]);
 	handWritingManager->setTestModels(&testingModel);
@@ -228,8 +230,10 @@ void cin2App::testClassifier(float ratio)
 void cin2App::mouseDown( MouseEvent event )
 {
 //	clearModels();
+
+	std::vector<AppWindow*> * windows = context->getWindows();
 	pressed = true;
-	for (std::vector<AppWindow*>::iterator it = windows.begin(); it != windows.end(); ++it) {
+	for (std::vector<AppWindow*>::iterator it = windows->begin(); it != windows->end(); ++it) {
 		(*it) -> mouseDown(event);
 	}	
 }
@@ -242,7 +246,8 @@ void cin2App::mouseUp(MouseEvent event)
 
 void cin2App::mouseDrag(MouseEvent event)
 {
-	for (std::vector<AppWindow*>::iterator it = windows.begin(); it != windows.end(); ++it) {
+	std::vector<AppWindow*> * windows = context->getWindows();
+	for (std::vector<AppWindow*>::iterator it = windows->begin(); it != windows->end(); ++it) {
 		(*it)->mouseDrag(event);
 	}
 
@@ -260,8 +265,8 @@ void cin2App::mouseDrag(MouseEvent event)
 	}
 	delete processedEntity;
 	processedModel = handWritingManager->getPreprocessedModel("NN", inputModel);
-	windows.at(1)->setModel(processedModel);
-	windows.at(3)->setModel(processedModel);
+	context->putModelInWindowByIndex(1, processedModel);
+	context->putModelInWindowByIndex(3, processedModel);
 	anglesModel->addEntity(anglesEntity);
 	pressed = false;
 	
@@ -297,8 +302,10 @@ void cin2App::update()
 
 void cin2App::draw()
 {
+	std::vector<AppWindow*> * windows = context->getWindows();
+
 	gl::clear(Color(0.5, 0.5, 0.5));
-	for (std::vector<AppWindow*>::iterator it = windows.begin(); it != windows.end(); ++it) {
+	for (std::vector<AppWindow*>::iterator it = windows->begin(); it != windows->end(); ++it) {
 		(*it)->AppWindow::draw();
 	}
 

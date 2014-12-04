@@ -28,7 +28,7 @@ Model* ClassifierDP::getPreprocessedModel(Model *model) {
 	}
 
 	processedModel->addEntity(first);
-	processedModel->normalizeBoundingBox();
+	//processedModel->normalizeBoundingBox();
 	first = (PolyLineEntity*)processedModel->getEntityByIndex(0);
 	processedModel->popEntity();
 
@@ -49,39 +49,102 @@ void ClassifierDP::prepareTrainingData(std::vector<Model*> * inputModels)
 }
 
 
-ClassificationResult ClassifierDP::classify(Model * model)
+ClassificationResult ClassifierDP::classifyAndPreview(Model * model)
+{
+	Model * match;
+	ClassificationResult result;
+	std::tuple<ClassificationResult, Model*> resultAndMatch = classifyDP(model);
+
+	Model * temp = getPreprocessedModel(model);
+
+	result = std::get<0>(resultAndMatch);
+	match = std::get<1>(resultAndMatch);
+
+	Model * preview = new Model();
+	preview->setDigit(match->getDigit());
+
+	Entity * modelEntity = temp->getEntityByIndex(0);
+	Entity * matchEntity = match->getEntityByIndex(0);
+	Entity * modelEntityClone = modelEntity->clone();
+	Entity * matchEntityClone = matchEntity;
+
+	matchEntityClone->setColor(ci::Color(0.0, 1.0, 0.0));
+
+	preview->addEntity(modelEntityClone);
+	preview->addEntity(matchEntityClone);
+
+	// drawing matches between models:
+
+	std::vector<float> modelVector = getSequenceFromModel(temp);
+	std::vector<float> matchVector = getSequenceFromModel(match);
+
+	std::tuple<std::vector<int>, std::vector<int>> alignments = 
+		aligner->getBestAlignment(modelVector, matchVector);
+
+	std::vector<int> alignmentA = std::get<0>(alignments);
+	std::vector<int> alignmentB = std::get<1>(alignments);
+
+	for (int i = 0; i, i < alignmentA.size(); i++) {
+		PolyLineEntity * polyLineEntity = new PolyLineEntity();
+		polyLineEntity->setColor(ci::Color(0.0, 0.0, 1.0));
+		int indexA = alignmentA.at(i) + 1;
+		int indexB = alignmentB.at(i) + 1;
+		Vec2f point1 = ((PolyLineEntity*)modelEntityClone)->getObject()->getPoints().at(indexA);
+		Vec2f point2 = ((PolyLineEntity*)matchEntityClone)->getObject()->getPoints().at(indexB);
+		polyLineEntity->appendPoint(point1);
+		polyLineEntity->appendPoint(point2);
+		preview->addEntity(polyLineEntity);
+	}
+
+	context->putModelInWindowByIndex(4, preview);
+
+	delete temp;
+
+	return result;
+
+}
+
+ClassificationResult ClassifierDP::classify(Model * model) {
+	return std::get<0>(classifyDP(model));
+}
+
+
+std::tuple<ClassificationResult, Model*> ClassifierDP::classifyDP(Model * model)
 {
 
 	ClassificationResult result = std::vector <float>(10);
+	std::tuple<ClassificationResult, Model*> resultAndMatch;
 
+	Model * match = NULL;
 	if (trainingModels.size() == 0) {
-		return result;
-	}
+		resultAndMatch = std::make_tuple(result, match);
+		return resultAndMatch;
+	};
 	Model * processedInputModel = getPreprocessedModel(model);
-
-
 
 	float maxScore = -INFINITY;
 	char digit = '?';
-
-	// show matched model.. nasty
-
-	Model * match;
 
 	float maxScores[10];
 	
 	for (int i = 0; i < 10; i++) {
 		maxScores[i] = -INFINITY;
 	}
-	std::vector<int> modelVector = getSequenceFromModel(processedInputModel);
+	std::vector<float> modelVector = getSequenceFromModel(processedInputModel);
 
 	delete processedInputModel;
 
 	for (std::vector<Model*>::iterator it = trainingModels.begin(); it != trainingModels.end(); it++){
 
-		std::vector<int> exampleVector = getSequenceFromModel(*it);
+		std::vector<float> exampleVector = getSequenceFromModel(*it);
 
 		float score = getSequenceAlignScore(modelVector, exampleVector);
+
+		if (maxScore < score) {
+			maxScore = score;
+			match = (*it);
+		}
+
 		int digitIndex = (*it)->getDigit()-'0';
 		if (score > maxScores[digitIndex]) {
 			maxScores[digitIndex] = score;
@@ -92,6 +155,7 @@ ClassificationResult ClassifierDP::classify(Model * model)
 	// get minimal dist over all digits
 
 	float minScore = INFINITY;
+	maxScore = -INFINITY;
 	for (int i = 0; i < 10; i++) {
 		if (maxScore < maxScores[i]) {
 			maxScore = maxScores[i];
@@ -99,11 +163,13 @@ ClassificationResult ClassifierDP::classify(Model * model)
 		if (minScore > maxScores[i]) {
 			minScore = maxScores[i];
 		}
+
+
 	}
-	//if (maxScore == 0.0f) {
-	//	// shouldn't get here
-	//	return result;
-	//} todo:: !! - avoid getting 0 at each max scores
+
+	
+
+	context->putModelInWindowByIndex(4, match);
 
 
 	// normalize
@@ -111,11 +177,12 @@ ClassificationResult ClassifierDP::classify(Model * model)
 		result[i] = PolyLineProcessor::normalizeValue(maxScores[i], minScore , maxScore, 0.01, 1.0);
 	}
 
-	return result;
+	resultAndMatch = std::make_tuple(result, match);
+	return resultAndMatch;
 }
 
 
-std::vector<int> ClassifierDP::getSequenceFromModel(Model * model)
+std::vector<float> ClassifierDP::getSequenceFromModel(Model * model)
 {
 
 
@@ -126,35 +193,39 @@ std::vector<int> ClassifierDP::getSequenceFromModel(Model * model)
 
 	std::vector<float> anglesVector = PolyLineProcessor::toAnglesVector(first->getObject());
 
-	vector<int> sequence(0);
-
-	for (int i = 0; i < anglesVector.size(); i++) {
-
-		float val = anglesVector[i] * 10; // todo parametrize
-
-		int intVal = (int)round(val);
-
-		sequence.push_back(intVal);
-	}
-
-	return sequence;
+	return anglesVector;
 }
 
-void ClassifierDP::initAligner() 
+float ClassifierDP::getSequenceAlignScore(std::vector<float> A, std::vector<float> B)
 {
 
-	//std::map<int, std::map<int, float>> * matchScoreMatrix_;
-
-	aligner.setGapScore(-1.0);
-
-}
-
-float ClassifierDP::getSequenceAlignScore(std::vector<int> A, std::vector<int> B)
-{
-
-	//std::map<int, std::map<int, float>> * matchScoreMatrix_;
-
-	float score = aligner.getTotalScore(A, B);
+	float score = aligner->getTotalScore(A, B);
 	return score;
 
+}
+
+float matchScoreFunction(float a, float b)
+{
+	float score = abs(a - b);
+	if (score > 1.0) {
+		score = abs(2.0 - score);
+	}
+
+	return 0.2 - score;
+}
+
+float gapScoreFunction(float a)
+{
+	return - abs(a);
+
+}
+
+void ClassifierDP::initAligner()
+{
+
+	//std::map<int, std::map<int, float>> * matchScoreMatrix_;
+	aligner = new SequenceAligner();
+
+	aligner->setMatchScoreFunction(matchScoreFunction);
+	aligner->setGapScoreFunction(gapScoreFunction);
 }

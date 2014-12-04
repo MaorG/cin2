@@ -40,7 +40,8 @@ protected:
 public:
 
 	~ClassifierNNBattery();
-	ClassifierNNBattery(int sampleSize) :
+	ClassifierNNBattery(AppContext * context, int sampleSize) :
+		Classifier(context),
 		m_sampleSize(sampleSize){};
 
 
@@ -50,6 +51,10 @@ public:
 	void train();
 	void test(float ratio);
 	ClassificationResult classify(Model * model);
+	ClassificationResult classifyAndPreview(Model * model) {
+		return classify(model);
+	};
+
 
 };
 

@@ -1,5 +1,6 @@
 #pragma once
 #include "common.h"
+#include "AppContext.h";
 #include "Model.h"
 
 typedef std::vector<float> ClassificationResult;
@@ -10,13 +11,19 @@ typedef std::vector<float> ClassificationResult;
 class Classifier
 {
 protected:
+	AppContext * context;
+
 public:
+
+	Classifier(AppContext * aContext) :
+		context(aContext) {};
 
 	virtual Model* getPreprocessedModel(Model *model)=0;
 	virtual void prepareTrainingData(std::vector<Model*> * inputModels) = 0;	
 	virtual void train() = 0;
 	virtual void test(float ratio) = 0;
 	virtual ClassificationResult classify(Model * model) = 0;
+	virtual ClassificationResult classifyAndPreview(Model * model) = 0;
 
 };
 

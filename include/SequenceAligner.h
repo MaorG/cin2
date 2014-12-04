@@ -7,17 +7,9 @@ class SequenceAligner
 protected:
 
 	std::map<int, std::map<int, float>> * matchScoreMatrix_;  
-	float matchScoreFunction(int a, int b) {
 
-		if (abs(a - b) > 18) {
-			return (float)-abs(a + b);
-		}
-
-		return 5.0 - (float)abs(a - b);
-	};
-	float gapScoreFunction(int a) {
-		return (float)-abs(a);
-	};
+	float(*matchScoreFunction)(float, float);
+	float(*gapScoreFunction)(float);
 
 	// todo: work with templates!
 	float gapScore_;
@@ -30,11 +22,25 @@ protected:
 		matchScoreMatrix_->clear();
 	};
 
-	
+	std::vector<std::vector<float>> getAlignmentMatrix(std::vector<float> A, std::vector<float> B);
+
 
 public:
 
-	SequenceAligner(){};
+	SequenceAligner() {};
+	//SequenceAligner(float(*matchScoreFunction)(float, float),
+	//				float(*gapScoreFunction)(float)) :
+	//	matchScoreFunction(matchScoreFunction),
+	//	gapScoreFunction(gapScoreFunction) {};
+
+	void setMatchScoreFunction(float(*aMatchScoreFunction)(float, float)) {
+		matchScoreFunction = aMatchScoreFunction;
+	};
+
+	void setGapScoreFunction(float(*aGapScoreFunction)(float)) {
+		gapScoreFunction = aGapScoreFunction;
+	};
+
 	~SequenceAligner(){
 		clearMatchScore();
 	};
@@ -46,7 +52,9 @@ public:
 	};
 
 
-	float getTotalScore(std::vector<int> A, std::vector<int> B);
+	float getTotalScore(std::vector<float> A, std::vector<float> B);
+	std::tuple< std::vector<int>, std::vector<int>>
+		getBestAlignment(std::vector<float> A, std::vector<float> B);
 
 };
 

@@ -5,6 +5,7 @@ using namespace ci::gl;
 
 PolyLineEntity::PolyLineEntity()
 {
+	color = ci::Color(1.0, 0.0, 0.0);
 	object = new PolyLine2f();
 }
 

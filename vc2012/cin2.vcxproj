@@ -125,6 +125,7 @@
     <ClCompile Include="..\src\SequenceAligner.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\include\AppContext.h" />
     <ClInclude Include="..\include\Classifier.h" />
     <ClInclude Include="..\include\ClassifierDP.h" />
     <ClInclude Include="..\include\ClassifierMinDist.h" />

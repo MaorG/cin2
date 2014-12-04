@@ -18,8 +18,9 @@ protected:
 
 public:
 
-	ClassifierMinDist(int sampleSize) :
-		sampleSize(sampleSize){};
+	ClassifierMinDist(AppContext * context, int sampleSize) :
+		Classifier(context),
+		sampleSize(sampleSize) {};
 	~ClassifierMinDist(){};
 
 
@@ -29,6 +30,8 @@ public:
 	void train();
 	void test(float ratio);
 	ClassificationResult classify(Model * model);
-
+	ClassificationResult classifyAndPreview(Model * model) {
+		return classify(model);
+	};
 };
 

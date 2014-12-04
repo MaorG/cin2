@@ -12,19 +12,28 @@ class ClassifierDP : public Classifier
 {
 protected:
 	std::vector<Model*> trainingModels;
-	float getSequenceAlignScore(std::vector<int> A, std::vector<int> B);
-	std::vector<int> getSequenceFromModel(Model * model);
+
+	std::tuple<ClassificationResult, Model*> classifyDP(Model * model);
+
+	float getSequenceAlignScore(std::vector<float> A, std::vector<float> B);
+	std::vector<float> getSequenceFromModel(Model * model);
 	int sampleSize;
 	void initAligner();
-	SequenceAligner aligner;
+	SequenceAligner * aligner;
+
+	//float matchScoreFunction(float a, float b);
+	//float gapScoreFunction(float a);
 
 public:
 
-	ClassifierDP(int sampleSize) :
-		sampleSize(sampleSize){
+	ClassifierDP(AppContext * context, int sampleSize) :
+		Classifier(context),
+		sampleSize(sampleSize) {
 		initAligner();
 	};
-	~ClassifierDP(){};
+	~ClassifierDP(){
+		delete aligner;
+	};
 
 
 	// todo: these belong in another class of classifier
@@ -33,6 +42,7 @@ public:
 	void train(){};
 	void test(float ratio){};
 	ClassificationResult classify(Model * model);
+	ClassificationResult classifyAndPreview(Model * model);
 
 };
 
