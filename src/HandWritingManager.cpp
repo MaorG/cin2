@@ -114,30 +114,8 @@ void HandWritingManager::classify(Model * model, bool preview)
 	model->setDigit(getDigitFromResult(result));
 }
 
-void printResultMatrix(std::string name, int resultMatrix[10][10]){
-	int amountCorrect = 0;
-	int amountTotal = 0;
+void classifySequence(Model * model, bool preview);
 
-	ci::app::console() << name << std::endl;
-	for (int i = 0; i < 10; i++) {
-		ci::app::console() << "(" << i << ")";
-
-		for (int j = 0; j < 10; j++) {
-
-			amountTotal += resultMatrix[i][j];
-			if (i == j) {
-				amountCorrect += resultMatrix[i][j];
-			}
-
-			ci::app::console() << "\t" << resultMatrix[i][j];
-		}
-		ci::app::console() << std::endl;
-	}
-
-	float rate = (float)amountCorrect / (float)amountTotal;
-	ci::app::console() << " total: " << rate;
-	ci::app::console() << std::endl;
-}
 
 void HandWritingManager::test()
 
@@ -179,9 +157,9 @@ void HandWritingManager::test()
 		resultMatrix[expectedOutput][finalOutput] ++;
 	}
 
-	printResultMatrix("NN", NNResultMatrix);
-	printResultMatrix("MinDist", minDistResultMatrix);
-	printResultMatrix("Dynamic", dynamicResultMatrix);
-	printResultMatrix("Combined", resultMatrix);
+	HandWritingUtils::printResultMatrix("NN", NNResultMatrix);
+	HandWritingUtils::printResultMatrix("MinDist", minDistResultMatrix);
+	HandWritingUtils::printResultMatrix("Dynamic", dynamicResultMatrix);
+	HandWritingUtils::printResultMatrix("Combined", resultMatrix);
 
 }

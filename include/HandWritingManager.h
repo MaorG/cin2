@@ -21,6 +21,7 @@ public:
 	void setTestModels(std::vector<Model*> * models);
 	void test();
 	void classify(Model * model, bool preview);
+	void classifySequence(Model * model, bool preview);
 
 	Model* getPreprocessedModel(std::string classifierName, Model *model);
 };
