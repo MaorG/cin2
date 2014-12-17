@@ -14,7 +14,7 @@ protected:
 	std::vector<Model*> trainingModels;
 	float getDistanceBetweenModels(Model * first, Model * second);
 	int sampleSize;
-
+	std::tuple<ClassificationResult, Model*> classifyMinDist(Model * model);
 
 public:
 
@@ -30,8 +30,6 @@ public:
 	void train();
 	void test(float ratio);
 	ClassificationResult classify(Model * model);
-	ClassificationResult classifyAndPreview(Model * model) {
-		return classify(model);
-	};
+	ClassificationResult classifyAndPreview(Model * model);
 };
 

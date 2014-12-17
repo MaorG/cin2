@@ -75,7 +75,7 @@ void cin2App::setup()
 
 	AppWindow * window2 = new AppWindow();
 	window2->setModel(processedModel);
-	window2->setRect(Rectf(210, 0, 410, 200));
+	window2->setRect(Rectf(210, 0, -410, -200));
 	window2->addRenderer(polyLineRenderer);
 	context->AddWindow((window2));
 
@@ -189,20 +189,20 @@ void cin2App::getTrainingDataFromFile() {
 	//	trainingModel[0].begin(),
 	//	trainingModel[0].end());
 
-	fileManager.setFlippedInput(true);
-	for (int i = 0; i < 10; i++) {
-		stringstream ss;
-		std::string fileName;
+	//fileManager.setFlippedInput(true);
+	//for (int i = 0; i < 10; i++) {
+	//	stringstream ss;
+	//	std::string fileName;
 
-		ss << "digit_" << i << ".json";
-		ss >> fileName;
+	//	ss << "digit_" << i << ".json";
+	//	ss >> fileName;
 
 
-		vector<Model*> * temp = fileManager.getDigitsFromJSONFile(fileName);
-		//trainingModel[0].insert(trainingModel[0].end(), temp->begin(), temp->end());
-		trainingModel[1].insert(trainingModel[1].end(), temp->begin(), temp->end());
-		//trainingModel[1].insert(trainingModel[1].end(), temp->begin(), temp->begin() + 2);
-	}
+	//	vector<Model*> * temp = fileManager.getDigitsFromJSONFile(fileName);
+	//	//trainingModel[0].insert(trainingModel[0].end(), temp->begin(), temp->end());
+	//	trainingModel[1].insert(trainingModel[1].end(), temp->begin(), temp->end());
+	//	//trainingModel[1].insert(trainingModel[1].end(), temp->begin(), temp->begin() + 2);
+	//}
 	
 	
 
@@ -212,17 +212,17 @@ void cin2App::getTrainingDataFromFile() {
 void cin2App::trainClassifier()
 {
 	getTrainingDataFromFile();
-//	handWritingManager->setExampleModels("NN", &trainingModel[0]);
-	handWritingManager->setExampleModels("MinDist", &trainingModel[1]);
-	handWritingManager->setExampleModels("Dynamic", &trainingModel[1]);
+	handWritingManager->setExampleModels("NN", &trainingModel[0]);
+	handWritingManager->setExampleModels("MinDist", &trainingModel[0]);
+	handWritingManager->setExampleModels("Dynamic", &trainingModel[0]);
 }
 
 void cin2App::testClassifier(float ratio)
 {
 	getTrainingDataFromFile();
-//	handWritingManager->setExampleModels("NN", &trainingModel[0]);
-	handWritingManager->setExampleModels("MinDist", &trainingModel[1]);
-	handWritingManager->setExampleModels("Dynamic", &trainingModel[1]);
+	handWritingManager->setExampleModels("NN", &trainingModel[0]);
+	handWritingManager->setExampleModels("MinDist", &trainingModel[0]);
+	handWritingManager->setExampleModels("Dynamic", &trainingModel[0]);
 	handWritingManager->setTestModels(&testingModel);
 	handWritingManager->test();
 }
@@ -310,7 +310,7 @@ void cin2App::draw()
 	}
 
 	gl::color(Color(0, 0, 0));
-	gl::drawLine(Vec2f(0, 100), Vec2f(700, 100));;
+	//gl::drawLine(Vec2f(0, 100), Vec2f(700, 100));
 }
 
 CINDER_APP_NATIVE( cin2App, RendererGl )

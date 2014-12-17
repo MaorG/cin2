@@ -113,6 +113,7 @@
     <ClCompile Include="..\src\ClassifierNNBattery.cpp" />
     <ClCompile Include="..\src\FileManager.cpp" />
     <ClCompile Include="..\src\HandWritingManager.cpp" />
+    <ClCompile Include="..\src\HandWritingUtils.cpp" />
     <ClCompile Include="..\src\Model.cpp" />
     <ClCompile Include="..\src\PolyLineProcessor.cpp" />
     <ClCompile Include="..\src\PolyLineRenderer.cpp" />
@@ -133,6 +134,7 @@
     <ClInclude Include="..\include\common.h" />
     <ClInclude Include="..\include\FileManager.h" />
     <ClInclude Include="..\include\HandWritingManager.h" />
+    <ClInclude Include="..\include\HandWritingUtils.h" />
     <ClInclude Include="..\include\Model.h" />
     <ClInclude Include="..\include\PolyLineProcessor.h" />
     <ClInclude Include="..\include\PolyLineRenderer.h" />

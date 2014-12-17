@@ -8,9 +8,6 @@
 #include "string.h"
 #include "AppContext.h"
 
-// todo: use Model* as input/testing, 
-// and vector<float> (or map<key digit, score float >) for output
-// classifierManager will actually classify the Model
 class HandWritingManager
 {
 protected:
@@ -20,13 +17,11 @@ protected:
 	ClassificationResult classifyToResult(Model * model, bool preview);
 public:
 	HandWritingManager(AppContext * context, int sampleSize);
-
-	Model* getPreprocessedModel(std::string classifierName, Model *model);
-
 	void setExampleModels(std::string classifierName, std::vector<Model*> * models);
 	void setTestModels(std::vector<Model*> * models);
 	void test();
 	void classify(Model * model, bool preview);
 
+	Model* getPreprocessedModel(std::string classifierName, Model *model);
 };
 

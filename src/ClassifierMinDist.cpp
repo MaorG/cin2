@@ -61,72 +61,90 @@ void ClassifierMinDist::test(float ratio)
 	ci::app::console() << endl;
 }
 
+ClassificationResult  ClassifierMinDist::classifyAndPreview(Model * model) {
+
+	Model * match;
+	ClassificationResult result;
+	std::tuple<ClassificationResult, Model*> resultAndMatch = classifyMinDist(model);
+
+	Model * temp = getPreprocessedModel(model);
+
+	result = std::get<0>(resultAndMatch);
+	match = std::get<1>(resultAndMatch);
+
+	if (match == NULL) {
+		return result;
+	}
+
+	Model * preview = new Model();
+	preview->setDigit(match->getDigit());
+
+	Entity * modelEntity = temp->getEntityByIndex(0);
+	Entity * matchEntity = match->getEntityByIndex(0);
+	Entity * modelEntityClone = modelEntity->clone();
+	Entity * matchEntityClone = matchEntity;
+
+	matchEntityClone->setColor(ci::Color(0.0, 1.0, 0.0));
+
+	preview->addEntity(modelEntityClone);
+	preview->addEntity(matchEntityClone);
+
+	context->putModelInWindowByIndex(3, preview);
+
+
+	return result;
+}
+
 ClassificationResult ClassifierMinDist::classify(Model * model)
+{
+	return std::get<0>(classifyMinDist(model));
+}
+
+std::tuple<ClassificationResult, Model*>  ClassifierMinDist::classifyMinDist(Model * model)
 {
 
 	ClassificationResult result = std::vector <float>(10);
 
+	std::tuple<ClassificationResult, Model*> resultAndMatch;
+
+	Model * match = NULL;
 	if (trainingModels.size() == 0) {
-		return result;
-	}
+		resultAndMatch = std::make_tuple(result, match);
+		return resultAndMatch;
+	};
 	Model * processedInputModel = getPreprocessedModel(model);
 
 
 
 	float minDist = 1000;
 	char digit = '?';
-
-	// show matched model.. nasty
-
-	Model * match;
-
-	float minDistances[10];
 	
 	for (int i = 0; i < 10; i++) {
-		minDistances[i] = 1000;
+		result[i] = INFINITY;
 	}
 
 	for (std::vector<Model*>::iterator it = trainingModels.begin(); it != trainingModels.end(); it++){
 		float dist = getDistanceBetweenModels(processedInputModel, *it);
 		int digitIndex = (*it)->getDigit()-'0';
-		if (dist < minDistances[digitIndex]) {
-			minDistances[digitIndex] = dist;
+		if (dist < result[digitIndex]) {
+			result[digitIndex] = dist;
+		}
+
+		if (dist < minDist) {
+			minDist = dist;
+			match = (*it);
 		}
 	}
 
-	// prepare result from minDistances
-	// get minimal dist over all digits
 	for (int i = 0; i < 10; i++) {
-		if (minDist > minDistances[i]) {
-			minDist = minDistances[i];
-		}
+		result[i] *= -1.0f;
 	}
-	if (minDist == 0.0f) {
-		// shouldn't get here
-		return result;
-	}
-	// normalize
-	for (int i = 0; i < 10; i++) {
-		result[i] = minDist / minDistances[i];
-	}
+
+	resultAndMatch = std::make_tuple(result, match);
 
 	delete processedInputModel;
 
-	return result;
-	
-	//model->setDigit(digit);
-
-	// temp!!
-
-	//model->clear();
-
-	//PolyLineEntity* a = (PolyLineEntity*)processedInputModel->getEntityByIndex(0);
-	//PolyLineEntity* b = (PolyLineEntity*)match->getEntityByIndex(0);
-	//
-	//PolyLineProcessor::chainPolyLines(a, b);
-	//model->addEntity(a);
-//	model->addEntity(b);
-
+	return resultAndMatch;
 }
 
 float ClassifierMinDist::getDistanceBetweenModels(Model * first, Model * second) {

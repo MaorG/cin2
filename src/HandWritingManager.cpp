@@ -65,14 +65,34 @@ ClassificationResult HandWritingManager::classifyToResult(Model * model, bool pr
 
 		Classifier * classifier = it->second;
 
-		ClassificationResult oneResult;
+		ClassificationResult classifierResult;
 		if (!preview) {
-			oneResult = classifier->classify(model);
+			classifierResult = classifier->classify(model);
 		}
 		else {
-			oneResult = classifier->classifyAndPreview(model);
+			classifierResult = classifier->classifyAndPreview(model);
 		}
-		resultVector.push_back(oneResult);
+
+
+		// normalizing result
+		float minScore = INFINITY;
+		float maxScore = -INFINITY;
+		for (int i = 0; i < 10; i++) {
+			if (maxScore < classifierResult[i]) {
+				maxScore = classifierResult[i];
+			}
+			if (minScore > classifierResult[i]) {
+				minScore = classifierResult[i];
+			}
+		}
+
+		// normalize
+		for (int i = 0; i < 10; i++) {
+			result[i] = HandWritingUtils::normalizeValue(classifierResult[i], minScore, maxScore, 0.01, 1.0);
+		}
+
+
+		resultVector.push_back(classifierResult);
 
 	}
 
@@ -142,9 +162,9 @@ void HandWritingManager::test()
 		int finalOutput;
 		ClassificationResult result;
 
-//		result = classifiers["NN"]->classify(*it);
-//		finalOutput = getDigitFromResult(result) - '0';
-//		NNResultMatrix[expectedOutput][finalOutput] ++;
+		result = classifiers["NN"]->classify(*it);
+		finalOutput = getDigitFromResult(result) - '0';
+		NNResultMatrix[expectedOutput][finalOutput] ++;
 
 		result = classifiers["MinDist"]->classify(*it);
 		finalOutput = getDigitFromResult(result) - '0';

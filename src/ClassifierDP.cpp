@@ -60,6 +60,10 @@ ClassificationResult ClassifierDP::classifyAndPreview(Model * model)
 	result = std::get<0>(resultAndMatch);
 	match = std::get<1>(resultAndMatch);
 
+	if (match == NULL) {
+		return result;
+	}
+
 	Model * preview = new Model();
 	preview->setDigit(match->getDigit());
 
@@ -125,10 +129,8 @@ std::tuple<ClassificationResult, Model*> ClassifierDP::classifyDP(Model * model)
 	float maxScore = -INFINITY;
 	char digit = '?';
 
-	float maxScores[10];
-	
 	for (int i = 0; i < 10; i++) {
-		maxScores[i] = -INFINITY;
+		result[i] = -INFINITY;
 	}
 	std::vector<float> modelVector = getSequenceFromModel(processedInputModel);
 
@@ -146,36 +148,12 @@ std::tuple<ClassificationResult, Model*> ClassifierDP::classifyDP(Model * model)
 		}
 
 		int digitIndex = (*it)->getDigit()-'0';
-		if (score > maxScores[digitIndex]) {
-			maxScores[digitIndex] = score;
+		if (score > result[digitIndex]) {
+			result[digitIndex] = score;
 		}
 	}
-
-	// prepare result from minDistances
-	// get minimal dist over all digits
-
-	float minScore = INFINITY;
-	maxScore = -INFINITY;
-	for (int i = 0; i < 10; i++) {
-		if (maxScore < maxScores[i]) {
-			maxScore = maxScores[i];
-		}
-		if (minScore > maxScores[i]) {
-			minScore = maxScores[i];
-		}
-
-
-	}
-
-	
 
 	context->putModelInWindowByIndex(4, match);
-
-
-	// normalize
-	for (int i = 0; i < 10; i++) {
-		result[i] = PolyLineProcessor::normalizeValue(maxScores[i], minScore , maxScore, 0.01, 1.0);
-	}
 
 	resultAndMatch = std::make_tuple(result, match);
 	return resultAndMatch;
@@ -211,12 +189,18 @@ float matchScoreFunction(float a, float b)
 		score = abs(2.0 - score);
 	}
 
-	return 0.2 - score;
+	return 10.0 * (0.2 - score);
 }
 
 float gapScoreFunction(float a)
 {
-	return - abs(a);
+	float score = abs(a);
+
+	if (score < 0.1) {
+		score = 0.1;
+	}	
+
+	return - 5.0 * score;
 
 }
 
