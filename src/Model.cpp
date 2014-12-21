@@ -23,6 +23,9 @@ void Model::normalizeBoundingBox()
 	float width = fmax (boundingBox.getWidth(), 0.3);
 	float height = fmax (boundingBox.getHeight(), 0.3);
 
+	float scaleX = fmax(boundingBox.getWidth(), 0.3);
+	float scaleY = fmax(boundingBox.getHeight(), 0.3);
+
 	ci::Vec2f center = boundingBox.getCenter();
 	ci::Vec2f scale = ci::Vec2f(0.7f / width, 1.0f / height);
 
@@ -30,9 +33,7 @@ void Model::normalizeBoundingBox()
 		Entity *entity = *it;
 		(*it)->scaleFromCenter(scale, center);
 		(*it)->move(ci::Vec2f(0.5 - center.x, 0.5 - center.y));
-}
-
-
+	}
 
 }
 

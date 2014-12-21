@@ -36,6 +36,7 @@ class cin2App : public AppNative {
 	void trainClassifier();
 	void testClassifier(float ratio);
 	void classifyModel(Model* model);
+	void classifySequence(Model* model);
 
 	void getTrainingDataFromFile();
 
@@ -113,10 +114,6 @@ void cin2App::keyDown(KeyEvent event)
 	case 'x':
 		clearModels();
 		break;
-	case 's':
-		storeModel();
-		clearModels();
-		break;
 	case 'l':
 		clearModels();
 
@@ -145,11 +142,21 @@ void cin2App::keyDown(KeyEvent event)
 	case 'r':
 		testClassifier(0.15);
 		break;
+	case 's':
+		classifySequence(inputModel);
+		break;
+
 	case 'c':
 		classifyModel(inputModel);
 		//		clearModels();		
 		break;
 	}
+}
+
+void cin2App::classifySequence(Model* model) {
+	//classifiers[0]->classify(model);
+	//classifiers[1]->classify(model);
+	handWritingManager->classifySequence(model, true);
 }
 
 void cin2App::classifyModel(Model* model) {
@@ -212,9 +219,9 @@ void cin2App::getTrainingDataFromFile() {
 void cin2App::trainClassifier()
 {
 	getTrainingDataFromFile();
-	handWritingManager->setExampleModels("NN", &trainingModel[0]);
+	//handWritingManager->setExampleModels("NN", &trainingModel[0]);
 	handWritingManager->setExampleModels("MinDist", &trainingModel[0]);
-	handWritingManager->setExampleModels("Dynamic", &trainingModel[0]);
+	//handWritingManager->setExampleModels("Dynamic", &trainingModel[0]);
 }
 
 void cin2App::testClassifier(float ratio)
@@ -242,6 +249,7 @@ void cin2App::mouseUp(MouseEvent event)
 {
 	//classifier.classify(&inputModel);
 	//classifier.classifyArray(inputModel);
+	int a = 0;
 }
 
 void cin2App::mouseDrag(MouseEvent event)

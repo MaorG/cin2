@@ -11,7 +11,12 @@ public:
 	PolyLineProcessor();
 	~PolyLineProcessor();
 
+	void PolyLineProcessor::orientPolylines(std::vector<PolyLineEntity*> * entities);
+
 	static void chainPolyLines(PolyLineEntity* firstEntity, PolyLineEntity* secondEntity);
+	static PolyLineEntity* unitePolyLines(std::vector<PolyLineEntity*> * entities, int pointAmount);
+
+
 
 	static PolyLineEntity * prepareForNN(PolyLineEntity* polyLineEntity, bool relative, int segments);
 	static PolyLineEntity * process2(PolyLineEntity* polyLineEntity);

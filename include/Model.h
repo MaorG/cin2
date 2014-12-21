@@ -16,7 +16,7 @@ public:
 	std::vector<Entity*> *getEntities() { return entities; };
 	int size();
 	void addEntity(Entity* entity);
-	void  popEntity();
+	void popEntity();
 	Entity* getEntityByIndex(int index);
 	void clear();
 	Model();

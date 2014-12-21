@@ -14,6 +14,41 @@ PolyLineProcessor::~PolyLineProcessor()
 {
 }
 
+PolyLineEntity* PolyLineProcessor::unitePolyLines(std::vector<PolyLineEntity*> * entities, int pointAmount)
+{
+	PolyLine2f * result;
+	std::vector<PolyLine2f *> polyLines;
+	std::vector<PolyLine2f *> sampledPolyLines;
+	std::vector<int> pointAmounts;
+	std::vector<float> lengths;
+	float lengthSum = 0;
+
+	for each (auto entity in *entities) {
+		polyLines.push_back(entity->getObject());
+		float length = calcLength(entity->getObject());
+		lengths.push_back(length);
+		lengthSum += length;
+	}
+
+	for each (auto length in lengths) {
+		pointAmounts.push_back((int)round((float)(pointAmount - 1) * length / lengthSum) + 1);
+	}
+
+	for (int i = 0; i < polyLines.size(); i++) {
+		if (pointAmounts.at(i) > 1) {
+			sampledPolyLines.push_back(uniformResample(polyLines.at(i), pointAmounts.at(i) - 1));
+		}
+	}
+
+		// not considering the extra point in each polyline... 
+	// todo chainpolylineentities
+	return entities->at(0);
+}
+
+void PolyLineProcessor::orientPolylines(std::vector<PolyLineEntity*> * entities)
+{
+}
+
 void PolyLineProcessor::chainPolyLines(PolyLineEntity* firstEntity, PolyLineEntity* secondEntity)
 {
 	PolyLine2f * first = firstEntity->getObject();
@@ -267,7 +302,8 @@ PolyLine2f* PolyLineProcessor::uniformResample(PolyLine2f* polyLine, int amount)
 
 
 	std::vector<Vec2f> points = polyLine->getPoints();
-	int degree = points.size() - 1 < 4 ? points.size() - 1 : 4;
+	//int degree = points.size() - 1 < 4 ? points.size() - 1 : 4;
+	int degree = 1;
 	Path2d path = Path2d(BSpline2f(points, degree, false, true));
 
 	float splineLength = path.calcLength();
@@ -299,27 +335,6 @@ PolyLine2f* PolyLineProcessor::uniformResample(PolyLine2f* polyLine, int amount)
 	points.clear();
 
 	return sampled;
-	/*
-
-
-
-
-	double accumulatedLength = 0;
-
-
-	PolyLine2f* polyLineCopy = new PolyLine2f(*polyLine);
-
-
-	while (accumulatedLength <= length) {
-
-		sampled->push_back(pointAlongPolyLine(polyLine, accumulatedLength));
-		accumulatedLength += sampleLength;
-	}
-
-	delete polyLineCopy;
-	return sampled;
-
-	*/
 }
 
 // todo: delete
