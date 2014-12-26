@@ -4,6 +4,7 @@
 Model::Model() {
 	entities = new std::vector<Entity*>();
 	digit = ' ';
+	modelResult = "hello";
 };
 
 Model::~Model() { 

@@ -16,11 +16,16 @@ PolyLineProcessor::~PolyLineProcessor()
 
 PolyLineEntity* PolyLineProcessor::unitePolyLines(std::vector<PolyLineEntity*> * entities, int pointAmount)
 {
-	PolyLine2f * result;
+
+	if (pointAmount < 2) {
+		return NULL;
+	}
+	PolyLine2f * result = new PolyLine2f();
 	std::vector<PolyLine2f *> polyLines;
 	std::vector<PolyLine2f *> sampledPolyLines;
 	std::vector<int> pointAmounts;
 	std::vector<float> lengths;
+
 	float lengthSum = 0;
 
 	for each (auto entity in *entities) {
@@ -29,38 +34,54 @@ PolyLineEntity* PolyLineProcessor::unitePolyLines(std::vector<PolyLineEntity*> *
 		lengths.push_back(length);
 		lengthSum += length;
 	}
+	float segmentLength = lengthSum / (pointAmount - 1);
+	float lengthInEntity = 0;
 
-	for each (auto length in lengths) {
-		pointAmounts.push_back((int)round((float)(pointAmount - 1) * length / lengthSum) + 1);
-	}
+	int currentEntityIndex = 0;
 
-	for (int i = 0; i < polyLines.size(); i++) {
-		if (pointAmounts.at(i) > 1) {
-			sampledPolyLines.push_back(uniformResample(polyLines.at(i), pointAmounts.at(i) - 1));
+
+	for (int i = 0; i < pointAmount - 1; i++) {
+				
+
+		while (lengthInEntity > lengths[currentEntityIndex]) {
+			lengthInEntity -= lengths[currentEntityIndex];
+			currentEntityIndex++;
+			if (currentEntityIndex == polyLines.size()) {
+				pointAlongPolyLine(polyLines[currentEntityIndex], lengthInEntity);
+			}
 		}
+
+		Vec2f point = pointAlongPolyLine(polyLines[currentEntityIndex], lengthInEntity);
+		result->push_back(point);
+
+		lengthInEntity += segmentLength;
+
 	}
 
-		// not considering the extra point in each polyline... 
-	// todo chainpolylineentities
-	return entities->at(0);
+	Vec2f point = polyLines.back()->getPosition(1.0);
+	result->push_back(point);
+
+	PolyLineEntity* resultEntity = new PolyLineEntity();
+	resultEntity->setObject(result);
+
+	return resultEntity;
+
+
+
 }
 
-void PolyLineProcessor::orientPolylines(std::vector<PolyLineEntity*> * entities)
-{
-}
-
-void PolyLineProcessor::chainPolyLines(PolyLineEntity* firstEntity, PolyLineEntity* secondEntity)
+std::pair<bool, bool> getPolyLinesPairOrientations(PolyLineEntity* firstEntity, PolyLineEntity* secondEntity)
 {
 	PolyLine2f * first = firstEntity->getObject();
 	PolyLine2f * second = secondEntity->getObject();
 
 	if (first->size() <= 1) {
 		firstEntity->concat(secondEntity);
-		return;
+		return std::pair<bool, bool>(false, false);
 	}
-		
+
 	if (second->size() <= 0) {
-		return;
+		return std::pair<bool, bool>(false, false);
 	}
 
 	float gaps[4];
@@ -82,6 +103,25 @@ void PolyLineProcessor::chainPolyLines(PolyLineEntity* firstEntity, PolyLineEnti
 	bool reverseFirst = (minGapIndex == 0 || minGapIndex == 1);
 	bool reverseSecond = (minGapIndex == 1 || minGapIndex == 3);
 
+	return std::pair<bool, bool>(reverseFirst, reverseSecond);
+
+}
+
+void PolyLineProcessor::orientPolylines(std::vector<PolyLineEntity*> * entities)
+{
+
+}
+
+void PolyLineProcessor::chainPolyLines(PolyLineEntity* firstEntity, PolyLineEntity* secondEntity)
+{
+	std::pair<bool, bool> toReverse = getPolyLinesPairOrientations(firstEntity, secondEntity);
+
+	PolyLine2f * first = firstEntity->getObject();
+	PolyLine2f * second = secondEntity->getObject();
+
+	bool reverseFirst = toReverse.first;
+	bool reverseSecond = toReverse.second;
+
 	if (reverseFirst) {
 		reverse(firstEntity);
 	}
@@ -90,13 +130,6 @@ void PolyLineProcessor::chainPolyLines(PolyLineEntity* firstEntity, PolyLineEnti
 	}
 
 	firstEntity->concat(secondEntity);
-	//if (reverseFirst) {
-	//	reverse(firstEntity);
-	//}
-	//if (reverseSecond) {
-	//	reverse(secondEntity);
-	//}
-
 }
 
 void PolyLineProcessor::reverse(PolyLineEntity* polyLineEntity)

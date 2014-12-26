@@ -24,12 +24,15 @@ void AppRenderer::draw(Matrix33f transform, Model * model) {
 		std::ostringstream oss(2);
 
 		oss << "digit: " << model->getDigit() << std::ends;
-		std::string word;
-		
-		Vec3f temp = transform.transformVec(Vec3f(0, 1.0, 1.0));
-		Vec2f BL = Vec2f(temp.x, temp.y);
+
 		cinder::Font textfont = Font("Courier New", 20);
 
+
+		Vec3f temp = transform.transformVec(Vec3f(0, 1.0, 1.0));
+		Vec2f BL = Vec2f(temp.x, temp.y);
 		gl::drawString(oss.str(), BL, ColorA(1.0, 1.0, 1.0, 1.1), textfont);
+		temp = transform.transformVec(Vec3f(0, 0, 1.0));
+		BL = Vec2f(temp.x, temp.y);
+		gl::drawString(model->getModelResult(), BL, ColorA(1.0, 1.0, 1.0, 1.1), textfont);
 	}
 }

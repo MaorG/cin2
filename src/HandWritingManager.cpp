@@ -135,6 +135,7 @@ void HandWritingManager::classifySequence(Model * model, bool preview)
 		composition.push_back(indexInSuffix + 1);
 		suffixIndex += indexInSuffix + 1;
 	}
+	composition.push_back(suffixIndex + 1);
 	int a = 0;
 }
 

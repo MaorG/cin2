@@ -16,12 +16,35 @@ Model* ClassifierMinDist::getPreprocessedModel(Model *model) {
 	Model * processedModel = new Model();
 	 
 	std::vector<Entity*> * entities = model->getEntities();
+	
+	//for (std::vector<Entity*>::iterator it = entities->begin(); it != entities->end(); ++it) {
+	//	if ((*it)->isPolyLineEntity()) {
+	//		PolyLineEntity* polyLineEntity = (PolyLineEntity*)(*it)->clone();
+	//		processedModel->addEntity(polyLineEntity);
+	//	}
+	//}
+
+	PolyLineEntity* polyLineEntity = PolyLineProcessor::unitePolyLines((std::vector<PolyLineEntity*>*)entities, sampleSize);
+
+	processedModel->addEntity(polyLineEntity);
+//	PolyLineProcessor::orientPolylines((std::vector<PolyLineEntity*>*)processedModel->getEntities());
+	processedModel->setDigit(model->getDigit());
+	processedModel->normalizeBoundingBox();
+	return processedModel;
+}
+
+Model* getPreprocessedModelold(Model *model) {
+	Model * processedModel = new Model();
+
+	std::vector<Entity*> * entities = model->getEntities();
 
 	//isPolyLineEntity
+
+
 	PolyLineEntity* first = ((PolyLineEntity*)*(entities->begin()))->clone();
-	
-	
-	for (std::vector<Entity*>::iterator it = entities->begin()+1; it != entities->end(); ++it) {
+
+
+	for (std::vector<Entity*>::iterator it = entities->begin() + 1; it != entities->end(); ++it) {
 
 		if ((*it)->isPolyLineEntity()) {
 			PolyLineEntity* polyLineEntity = (PolyLineEntity*)(*it);
@@ -35,11 +58,12 @@ Model* ClassifierMinDist::getPreprocessedModel(Model *model) {
 	processedModel->popEntity();
 
 	processedModel->setDigit(model->getDigit());
-	PolyLineEntity* result = PolyLineProcessor::prepareForNN(first, true, sampleSize);
+	PolyLineEntity* result = PolyLineProcessor::prepareForNN(first, true, 10/*sampleSize*/);
 	delete first;
 	processedModel->addEntity(result);
 	return processedModel;
 }
+
 
 void ClassifierMinDist::prepareTrainingData(std::vector<Model*> * inputModels)
 {

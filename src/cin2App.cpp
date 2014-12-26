@@ -9,7 +9,7 @@
 #include "PolyLineProcessor.h"
 #include "Model.h"
 #include "HandWritingManager.h"
-#include "AppContext.h";
+#include "AppContext.h"
 #include <random>       // std::default_random_engine
 
 #define SAMPLE_SIZE 10
@@ -76,7 +76,7 @@ void cin2App::setup()
 
 	AppWindow * window2 = new AppWindow();
 	window2->setModel(processedModel);
-	window2->setRect(Rectf(210, 0, -410, -200));
+	window2->setRect(Rectf(210, 0, 410, 200));
 	window2->addRenderer(polyLineRenderer);
 	context->AddWindow((window2));
 
@@ -140,7 +140,7 @@ void cin2App::keyDown(KeyEvent event)
 		trainClassifier();
 		break;
 	case 'r':
-		testClassifier(0.15);
+		testClassifier(0.15f);
 		break;
 	case 's':
 		classifySequence(inputModel);
@@ -264,7 +264,6 @@ void cin2App::mouseDrag(MouseEvent event)
 	PolyLineEntity* Last = (PolyLineEntity*)(inputModel->getEntityByIndex(inputModel->size() - 1));
 
 	PolyLineEntity* processedEntity = PolyLineProcessor::prepareForNN(Last, true, SAMPLE_SIZE);
-//	PolyLineEntity* processedEntity2 = PolyLineProcessor::prepareForNN(processedEntity, true, SAMPLE_SIZE);
 	PolyLineEntity* anglesEntity = PolyLineProcessor::process2(processedEntity);
 
 	if (!pressed) {
@@ -274,7 +273,7 @@ void cin2App::mouseDrag(MouseEvent event)
 	delete processedEntity;
 	processedModel = handWritingManager->getPreprocessedModel("NN", inputModel);
 	context->putModelInWindowByIndex(1, processedModel);
-	context->putModelInWindowByIndex(3, processedModel);
+	//context->putModelInWindowByIndex(3, processedModel);
 	anglesModel->addEntity(anglesEntity);
 	pressed = false;
 	

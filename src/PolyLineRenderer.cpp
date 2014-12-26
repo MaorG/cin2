@@ -55,9 +55,15 @@ void PolyLineRenderer::drawPolyLineEntity(PolyLineEntity* polyLineEntity)
 
 	for (std::vector<Vec2f>::iterator it = polyLine->begin(); it != polyLine->end(); ++it) {
 		Vec2f point;
+		if (it == polyLine->begin()) {
+			gl::color(Color(0.0, 0.0, 0.0));
+			gl::drawSolidCircle(Vec2f(it->x, it->y), 4);
+		}
+		else {
+			gl::color(Color(1.0, 0.0, 0.0));
+			gl::drawSolidCircle(Vec2f(it->x, it->y), 2);
+		}
 
-		gl::drawSolidCircle(Vec2f(it->x, it->y), 2);
-		
 	}
 
 	for (std::vector<Vec2f>::iterator it = polyLine->begin(); it != polyLine->end() - 1; ++it) {

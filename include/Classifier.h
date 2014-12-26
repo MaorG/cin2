@@ -1,6 +1,6 @@
 #pragma once
 #include "common.h"
-#include "AppContext.h";
+#include "AppContext.h"
 #include "Model.h"
 
 typedef std::vector<float> ClassificationResult;
