@@ -50,3 +50,5 @@ Temporary Items
 *.log
 *.opensdf
 *.sdf
+*.exe
+*.ilk
