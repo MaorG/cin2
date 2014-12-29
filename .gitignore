@@ -52,3 +52,5 @@ Temporary Items
 *.sdf
 *.exe
 *.ilk
+vc2012/Debug/cin2.exe
+vc2012/Debug/cin2.ilk
