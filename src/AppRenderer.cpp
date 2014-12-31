@@ -19,20 +19,20 @@ AppRenderer::~AppRenderer()
 
 void AppRenderer::draw(Matrix33f transform, Model * model) {
 
-	if (model->getDigit() != ' ') {
+	//if (model->getSymbol() != ' ') {
 
-		std::ostringstream oss(2);
+		//std::ostringstream oss(2);
 
-		oss << "digit: " << model->getDigit() << std::ends;
+		//oss << "digit: " << model->getSymbol() << std::ends;
 
 		cinder::Font textfont = Font("Courier New", 20);
 
 
+		//Vec3f temp = transform.transformVec(Vec3f(0, 1.0, 1.0));
+		//Vec2f BL = Vec2f(temp.x, temp.y);
+		//gl::drawString(oss.str(), BL, ColorA(1.0, 1.0, 1.0, 1.1), textfont);
 		Vec3f temp = transform.transformVec(Vec3f(0, 1.0, 1.0));
 		Vec2f BL = Vec2f(temp.x, temp.y);
-		gl::drawString(oss.str(), BL, ColorA(1.0, 1.0, 1.0, 1.1), textfont);
-		temp = transform.transformVec(Vec3f(0, 0, 1.0));
-		BL = Vec2f(temp.x, temp.y);
-		gl::drawString(model->getModelResult(), BL, ColorA(1.0, 1.0, 1.0, 1.1), textfont);
-	}
+		gl::drawString(model->getSymbol(), BL, ColorA(1.0, 1.0, 1.0, 1.1), textfont);
+	//}
 }

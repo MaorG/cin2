@@ -3,7 +3,12 @@
 #include "AppContext.h"
 #include "Model.h"
 
-typedef std::vector<float> ClassificationResult;
+struct Classification2Result
+{
+	std::map<std::string, float> classifiactionMap;
+	std::string resultSymbol;
+	float confidence;
+};
 
 // todo: use Model* as input/testing, 
 // and vector<float> (or map<key digit, score float >) for output
@@ -22,8 +27,8 @@ public:
 	virtual void prepareTrainingData(std::vector<Model*> * inputModels) = 0;	
 	virtual void train() = 0;
 	virtual void test(float ratio) = 0;
-	virtual ClassificationResult classify(Model * model) = 0;
-	virtual ClassificationResult classifyAndPreview(Model * model) = 0;
+	virtual Classification2Result classify(Model * model) = 0;
+	virtual Classification2Result classifyAndPreview(Model * model) = 0;
 
 };
 

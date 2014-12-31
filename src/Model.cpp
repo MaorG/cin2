@@ -3,8 +3,7 @@
 
 Model::Model() {
 	entities = new std::vector<Entity*>();
-	digit = ' ';
-	modelResult = "hello";
+	symbol = "";
 };
 
 Model::~Model() { 

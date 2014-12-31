@@ -87,6 +87,17 @@ void ClassifierNNBattery::prepareTrainingData(std::vector<Model*> * inputModels)
 	unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
 	shuffle(inputModels->begin(), inputModels->end(), std::default_random_engine(seed));
 
+	// todo - move to another function
+	// collecting all possible outputs symbols from training
+	symbolIndices.clear();
+
+	for (std::vector<Model*>::iterator it = inputModels->begin(); it != inputModels->end(); it++) {
+		if (symbolIndices.find((*it)->getSymbol()) == symbolIndices.end()){
+			int availableIndex = symbolIndices.size();
+			symbolIndices[(*it)->getSymbol()] = availableIndex;
+		}
+	}
+
 	for (std::vector<Model*>::iterator it = inputModels->begin(); it != inputModels->end(); it++) {
 		Model * processedModel = getPreprocessedModel(*it);
 		std::vector <float> inputVector = convertModelToInputVector(processedModel);
@@ -94,11 +105,11 @@ void ClassifierNNBattery::prepareTrainingData(std::vector<Model*> * inputModels)
 
 		trainingInput.push_back(inputVector);
 		
-		int outputValue = (*it)->getDigit() - '0';
+		std::string outputSymbol = (*it)->getSymbol();
 
-		std::vector<float> outputVector;
-		for (int i = 0; i < 10; i++) {
-			outputVector.push_back(outputValue == i ? 1.0 : 0.0);
+		std::vector<float> outputVector(symbolIndices.size());
+		for (int i = 0; i <symbolIndices.size(); i++) {
+			outputVector.at(symbolIndices[outputSymbol] == i ? 1.0 : 0.0);
 		}
 
 		trainingOutput.push_back(outputVector);
@@ -109,12 +120,12 @@ void ClassifierNNBattery::prepareNNBattery()
 {
 	fannBattery.clear();
 
-	for (int i = 0; i < 10; i++) {
+	for each(auto symbolIndexPair in symbolIndices) {
 		struct fann* ann;
 		ann = fann_create_standard(4, m_inputVectorSize, 7, 5, 1);
 		fann_set_activation_function_hidden(ann, FANN_SIGMOID_SYMMETRIC);
 //		fann_set_activation_function_hidden(ann, FANN_LINEAR);
-		fannBattery.push_back(ann);
+		fannBattery[symbolIndexPair.first] = (ann);
 	}
 }
 
@@ -160,11 +171,12 @@ void ClassifierNNBattery::train()
 void ClassifierNNBattery::test(float ratio)
 {
 
-	prepareNNBattery();
 
 	struct fann_train_data ftd;
 
 	fann_type **inputArray = convertTrainingInputToVectors();
+
+	prepareNNBattery();
 
 	fann_type **outputArray[10];
 	for (int digitIndex = 0; digitIndex < 10; digitIndex++) {
@@ -175,14 +187,17 @@ void ClassifierNNBattery::test(float ratio)
 	int trainingAmount = (int)((1.0-ratio)* trainingInput.size());
 
 
-	for (int digitIndex = 0; digitIndex < 10; digitIndex++) {
+	//for (int digitIndex = 0; digitIndex < 10; digitIndex++) {
+	for each(auto symbolIndexPair in symbolIndices) {
+		auto symbolIndex = symbolIndexPair.second;
+		auto symbolString = symbolIndexPair.first;
 		ftd.num_data = trainingAmount;
 		ftd.num_input = m_inputVectorSize;
 		ftd.num_output = 1;
 		ftd.input = inputArray;
-		ftd.output = outputArray[digitIndex];
-		fann_train_on_data(fannBattery[digitIndex], &ftd, 100, 10, 0.02);
-		ci::app::console() << "Mean Square Error: " << digitIndex << ":  "<< fann_get_MSE(fannBattery[digitIndex]) << endl;
+		ftd.output = outputArray[symbolIndex];
+		fann_train_on_data(fannBattery[symbolString], &ftd, 100, 10, 0.02);
+		ci::app::console() << "Mean Square Error: " << symbolString << ":  " << fann_get_MSE(fannBattery[symbolString]) << endl;
 		ci::app::console() << endl;
 	}
 
@@ -190,7 +205,7 @@ void ClassifierNNBattery::test(float ratio)
 		return;
 	}
 	// testing
-
+	/*
 	int result[10][10];
 
 	for (int i = 0; i < 10; i++) {
@@ -205,9 +220,11 @@ void ClassifierNNBattery::test(float ratio)
 		fann_type *output;
 		output = (float*)malloc(1 * sizeof(float));
 
-		for (int digitIndex = 0; digitIndex < 10; digitIndex++) {
-			output = fann_run(fannBattery[digitIndex], inputArray[exampleIndex]);
-			outputVector[digitIndex] = (float)*output;
+		for each(auto symbolIndexPair in symbolIndices) {
+			auto symbolIndex = symbolIndexPair.second;
+			auto symbolString = symbolIndexPair.first;
+			output = fann_run(fannBattery[symbolString], inputArray[exampleIndex]);
+			outputVector[symbolIndex] = (float)*output;
 		}
 
 		int finalOutput = -1;
@@ -255,19 +272,27 @@ void ClassifierNNBattery::test(float ratio)
 	float rate = (float)amountCorrect / (float)amountTotal;
 	ci::app::console() << " total: " << rate;
 	ci::app::console() << endl;
+
+	*/
 }
 
-ClassificationResult ClassifierNNBattery::classify(Model * model) {
+Classification2Result ClassifierNNBattery::classify(Model * model) {
 	return classifyBattery(model);
 }
 
-ClassificationResult ClassifierNNBattery::classifyBattery(Model * model) {
+Classification2Result ClassifierNNBattery::classifyBattery(Model * model) {
 
-	ClassificationResult result = std::vector <float>(10);
+	Classification2Result result;
 
-	if (fannBattery.size() < 10) {
-		return result;
+	//if (fannBattery.size() < 10) {
+	//	return result;
+	//}
+
+	std::map<std::string, int> symbolIndices;
+
+	for (std::map<std::string, int>::iterator it = symbolIndices.begin(); it != symbolIndices.end(); ++it) {
 	}
+
 	std::vector <float> inputVector = convertModelToInputVector(model);
 
 	// todo; move to an aux func
@@ -280,9 +305,11 @@ ClassificationResult ClassifierNNBattery::classifyBattery(Model * model) {
 	fann_type *outputArray;
 	outputArray = (float*)malloc(1 *sizeof(float));
 
-	for (int digitIndex = 0; digitIndex < 10; digitIndex++) {
-		outputArray = fann_run(fannBattery[digitIndex], inputArray);
-		result[digitIndex] = outputArray[0];
+	for each(auto symbolIndexPair in symbolIndices) {
+		auto symbolIndex = symbolIndexPair.second;
+		auto symbolString = symbolIndexPair.first; 
+		outputArray = fann_run(fannBattery[symbolString], inputArray);
+		result.classifiactionMap[symbolString] = outputArray[0];
 	}
 
 	return result;

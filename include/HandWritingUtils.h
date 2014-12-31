@@ -10,6 +10,6 @@ public:
 	~HandWritingUtils();
 
 	static float normalizeValue(float value, float oldMin, float oldMax, float newMin, float newMax);
-	static void printResultMatrix(std::string name, int resultMatrix[10][10]);
+	static void printResultMatrix(std::string name, std::vector<std::vector<int>>);
 	//static std::vector<std::vector<int>> getCompositions(int n);
 };

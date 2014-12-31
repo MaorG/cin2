@@ -11,16 +11,16 @@ float HandWritingUtils::normalizeValue(float value, float oldMin, float oldMax, 
 	return newValue;
 }
 
-void HandWritingUtils::printResultMatrix(std::string name, int resultMatrix[10][10])
+void HandWritingUtils::printResultMatrix(std::string name, std::vector<std::vector<int>> resultMatrix)
 {
 	int amountCorrect = 0;
 	int amountTotal = 0;
 
 	ci::app::console() << name << std::endl;
-	for (int i = 0; i < 10; i++) {
-		ci::app::console() << "(" << i << ")";
+	for (int i = 0; i < resultMatrix.size(); i++) {
+		ci::app::console() << "(" << i << ")"; // todo: use symbol string
 
-		for (int j = 0; j < 10; j++) {
+		for (int j = 0; j < resultMatrix[i].size(); j++) {
 
 			amountTotal += resultMatrix[i][j];
 			if (i == j) {

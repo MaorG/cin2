@@ -32,7 +32,7 @@ Model* ClassifierDP::getPreprocessedModel(Model *model) {
 	first = (PolyLineEntity*)processedModel->getEntityByIndex(0);
 	processedModel->popEntity();
 
-	processedModel->setDigit(model->getDigit());
+	processedModel->setSymbol(model->getSymbol());
 	PolyLineEntity* result = PolyLineProcessor::prepareForNN(first, true, sampleSize);
 	delete first;
 	processedModel->addEntity(result);
@@ -49,11 +49,11 @@ void ClassifierDP::prepareTrainingData(std::vector<Model*> * inputModels)
 }
 
 
-ClassificationResult ClassifierDP::classifyAndPreview(Model * model)
+Classification2Result ClassifierDP::classifyAndPreview(Model * model)
 {
 	Model * match;
-	ClassificationResult result;
-	std::tuple<ClassificationResult, Model*> resultAndMatch = classifyDP(model);
+	Classification2Result result;
+	std::tuple<Classification2Result, Model*> resultAndMatch = classifyDP(model);
 
 	Model * temp = getPreprocessedModel(model);
 
@@ -65,7 +65,7 @@ ClassificationResult ClassifierDP::classifyAndPreview(Model * model)
 	}
 
 	Model * preview = new Model();
-	preview->setDigit(match->getDigit());
+	preview->setSymbol(match->getSymbol());
 
 	Entity * modelEntity = temp->getEntityByIndex(0);
 	Entity * matchEntity = match->getEntityByIndex(0);
@@ -108,16 +108,17 @@ ClassificationResult ClassifierDP::classifyAndPreview(Model * model)
 
 }
 
-ClassificationResult ClassifierDP::classify(Model * model) {
+Classification2Result ClassifierDP::classify(Model * model) {
 	return std::get<0>(classifyDP(model));
 }
 
 
-std::tuple<ClassificationResult, Model*> ClassifierDP::classifyDP(Model * model)
+std::tuple<Classification2Result, Model*> ClassifierDP::classifyDP(Model * model)
 {
 
-	ClassificationResult result = std::vector <float>(10);
-	std::tuple<ClassificationResult, Model*> resultAndMatch;
+	Classification2Result result;
+
+	std::tuple<Classification2Result, Model*> resultAndMatch;
 
 	Model * match = NULL;
 	if (trainingModels.size() == 0) {
@@ -127,29 +128,34 @@ std::tuple<ClassificationResult, Model*> ClassifierDP::classifyDP(Model * model)
 	Model * processedInputModel = getPreprocessedModel(model);
 
 	float maxScore = -INFINITY;
-	char digit = '?';
+	std::string symbol = "?";
 
-	for (int i = 0; i < 10; i++) {
-		result[i] = -INFINITY;
-	}
+
 	std::vector<float> modelVector = getSequenceFromModel(processedInputModel);
 
 	delete processedInputModel;
 
-	for (std::vector<Model*>::iterator it = trainingModels.begin(); it != trainingModels.end(); it++){
+	result.classifiactionMap.clear();
 
+
+	for (std::vector<Model*>::iterator it = trainingModels.begin(); it != trainingModels.end(); it++){
+		std::string matchSymbol = (*it)->getSymbol();
 		std::vector<float> exampleVector = getSequenceFromModel(*it);
 
 		float score = getSequenceAlignScore(modelVector, exampleVector);
 
-		if (maxScore < score) {
-			maxScore = score;
-			match = (*it);
+
+		if (result.classifiactionMap.find(matchSymbol) == result.classifiactionMap.end()) {
+			result.classifiactionMap.insert(std::pair<std::string, float>(matchSymbol, score));
 		}
 
-		int digitIndex = (*it)->getDigit()-'0';
-		if (score > result[digitIndex]) {
-			result[digitIndex] = score;
+		if (score > result.classifiactionMap[matchSymbol]) {
+			result.classifiactionMap[matchSymbol] = score;
+		}
+
+		if (score > maxScore){
+			maxScore = score;
+			match = (*it);
 		}
 	}
 

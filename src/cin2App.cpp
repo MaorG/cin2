@@ -31,7 +31,7 @@ class cin2App : public AppNative {
 	void draw();
 	void clearModels();
 	void storeModel();
-	void storeModel(char digit);
+	void storeModel(std::string symbol);
 	void addToFile(Model * model);
 	void trainClassifier();
 	void testClassifier(float ratio);
@@ -105,9 +105,11 @@ void cin2App::keyDown(KeyEvent event)
 	char c = event.getChar();
 
 	if (c >= '0' && c <= '9') {
-		inputModel -> setDigit(c);
+		std::string s = "";
+		s.push_back(c);
+		inputModel -> setSymbol(s);
 
-		storeModel(c);
+		storeModel(s);
 		clearModels();
 	}
 	switch (c) {
@@ -156,7 +158,7 @@ void cin2App::keyDown(KeyEvent event)
 void cin2App::classifySequence(Model* model) {
 	//classifiers[0]->classify(model);
 	//classifiers[1]->classify(model);
-	handWritingManager->classifySequence(model, true);
+	//handWritingManager->classifySequence(model, true);
 }
 
 void cin2App::classifyModel(Model* model) {
@@ -221,7 +223,7 @@ void cin2App::trainClassifier()
 	getTrainingDataFromFile();
 	//handWritingManager->setExampleModels("NN", &trainingModel[0]);
 	handWritingManager->setExampleModels("MinDist", &trainingModel[0]);
-	//handWritingManager->setExampleModels("Dynamic", &trainingModel[0]);
+	handWritingManager->setExampleModels("Dynamic", &trainingModel[0]);
 }
 
 void cin2App::testClassifier(float ratio)
@@ -285,15 +287,15 @@ void cin2App::clearModels() {
 	anglesModel->clear();
 }
 
-void cin2App::storeModel(char digit) 
+void cin2App::storeModel(std::string symbol) 
 {
-	processedModel->setDigit(digit);
+	processedModel->setSymbol(symbol);
 	addToFile(inputModel);
 }
 
 void cin2App::storeModel() 
 {
-	processedModel->setDigit('!');
+	processedModel->setSymbol("!");
 	addToFile(processedModel);
 }
 

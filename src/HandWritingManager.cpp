@@ -1,17 +1,18 @@
 #include "HandWritingManager.h"
 
-char getDigitFromResult(ClassificationResult result) 
+std::string getSymbolFromResult(Classification2Result result) 
 {
-	int output = -1;
+	std::string output;
 	float max = -INFINITY;
-	for (int i = 0; i < result.size(); i++) {
-		if (result[i] > max) {
-			max = result[i];
-			output = i;
+	for (std::map<std::string, float>::iterator it = result.classifiactionMap.begin();
+		it != result.classifiactionMap.end(); ++it) {
+		if (it->second > max) {
+			max = it->second;
+			output = it->first;
 		}
 	}
 
-	return output + '0';
+	return output;
 }
 
 HandWritingManager::HandWritingManager(AppContext * context, int sampleSize):
@@ -24,13 +25,24 @@ HandWritingManager::HandWritingManager(AppContext * context, int sampleSize):
 	ClassifierMinDist * minDist = new ClassifierMinDist(context, sampleSize);
 	classifiers["MinDist"] = minDist;
 
-	//ClassifierDP * dynamic = new ClassifierDP(context, sampleSize);
-	//classifiers["Dynamic"] = dynamic;
+	ClassifierDP * dynamic = new ClassifierDP(context, sampleSize);
+	classifiers["Dynamic"] = dynamic;
 }
 
 
 void HandWritingManager::setExampleModels(std::string classifierName, std::vector<Model*> * models)
 {
+
+	symbolIndices.clear();
+
+	for (std::vector<Model*>::iterator it = models->begin(); it != models->end(); it++) {
+		if (symbolIndices.find((*it)->getSymbol()) == symbolIndices.end()){
+			int availableIndex = symbolIndices.size();
+			symbolIndices[(*it)->getSymbol()] = availableIndex;
+		}
+	}
+
+
 	std::map<std::string, Classifier*>::iterator it = classifiers.find(classifierName);
 
 	if (it == classifiers.end()) {
@@ -61,17 +73,17 @@ Model* HandWritingManager::getPreprocessedModel(std::string classifierName, Mode
 	return classifier->getPreprocessedModel(model);
 }
 
-ClassificationResult HandWritingManager::classifyToResult(Model * model, bool preview)
+Classification2Result HandWritingManager::classifyToResult(Model * model, bool preview)
 {
-	ClassificationResult result = std::vector <float>(10);
-	std::vector <ClassificationResult> resultVector;
+	Classification2Result result;
+	std::vector <Classification2Result> resultVector;
 
 	for (std::map<std::string, Classifier*>::iterator it = classifiers.begin();
 		it != classifiers.end(); ++it) {
 
 		Classifier * classifier = it->second;
 
-		ClassificationResult classifierResult;
+		Classification2Result classifierResult;
 		if (!preview) {
 			classifierResult = classifier->classify(model);
 		}
@@ -83,18 +95,21 @@ ClassificationResult HandWritingManager::classifyToResult(Model * model, bool pr
 		// normalizing result
 		float minScore = INFINITY;
 		float maxScore = -INFINITY;
-		for (int i = 0; i < 10; i++) {
-			if (maxScore < classifierResult[i]) {
-				maxScore = classifierResult[i];
+
+		for (std::map<std::string, float>::iterator it = classifierResult.classifiactionMap.begin();
+			it != classifierResult.classifiactionMap.end(); ++it) {
+			if (maxScore < it->second) {
+				maxScore = it->second;
 			}
-			if (minScore > classifierResult[i]) {
-				minScore = classifierResult[i];
+			if (minScore > it->second) {
+				minScore = it->second;
 			}
 		}
 
 		// normalize
-		for (int i = 0; i < 10; i++) {
-			result[i] = HandWritingUtils::normalizeValue(classifierResult[i], minScore, maxScore, 0.01, 1.0);
+		for (std::map<std::string, float>::iterator it = classifierResult.classifiactionMap.begin();
+			it != classifierResult.classifiactionMap.end(); ++it) {
+			it->second = HandWritingUtils::normalizeValue(it->second, minScore, maxScore, 0.01, 1.0);
 		}
 
 
@@ -102,13 +117,17 @@ ClassificationResult HandWritingManager::classifyToResult(Model * model, bool pr
 
 	}
 
-	for (int i = 0; i < result.size(); i++) {
-		result[i] = 0;
-	}
+	result.classifiactionMap.clear();
 
 	for (int resultindex = 0; resultindex < resultVector.size(); resultindex++) {
-		for (int i = 0; i < result.size(); i++) {
-			result[i] += (0.5 + resultVector[resultindex][i]);
+		for (std::map<std::string, float>::iterator it = resultVector[resultindex].classifiactionMap.begin();
+			it != resultVector[resultindex].classifiactionMap.end(); ++it) {
+
+			if (result.classifiactionMap.find(it->first) == result.classifiactionMap.end()) {
+				result.classifiactionMap[it->first] = 0;
+			}
+
+			result.classifiactionMap[it->first] += (0.5 + it->second);
 		}
 	}
 	return result;
@@ -116,10 +135,12 @@ ClassificationResult HandWritingManager::classifyToResult(Model * model, bool pr
 
 void HandWritingManager::classify(Model * model, bool preview)
 {
-	ClassificationResult result = classifyToResult(model, preview);
-	model->setDigit(getDigitFromResult(result));
+	Classification2Result result = classifyToResult(model, preview);
+	model->setSymbol(getSymbolFromResult(result));
 }
 
+
+/*
 void HandWritingManager::classifySequence(Model * model, bool preview) 
 {
 	std::vector<Entity*> * entities = model->getEntities();
@@ -245,44 +266,74 @@ float HandWritingManager::classifySubSequence(Model * model, int startIndex, int
 	return max;
 	
 }
-
+*/
 
 
 void HandWritingManager::test()
 
 // todo - push into vector of classifiers. also - make an output struct
 {
-	int resultMatrix[10][10] = {0};
+	//int resultMatrix[10][10] = {0};
+	std::vector<std::vector<int>> resultMatrix;
+
+	// init resultMatrix
+
+	resultMatrix.resize(symbolIndices.size(), std::vector<int>(symbolIndices.size(), 0));
+
+
+
 
 	for each (auto classifierPair in classifiers) {
 		Classifier * classifier = classifierPair.second;
 		for (std::vector<Model*>::iterator it = testModels->begin(); it != testModels->end(); it++) {
-			int expectedOutput = (*it)->getDigit() - '0';
-			int finalOutput;
-			ClassificationResult result;
+			std::string expectedOutput = (*it)->getSymbol();
+			std::string finalOutput;
+			Classification2Result result;
 			for each (auto classifierPair in classifiers) {
 
 				Classifier * classifier = classifierPair.second;
 				result = classifier->classify(*it);
-				finalOutput = getDigitFromResult(result) - '0';
-				resultMatrix[expectedOutput][finalOutput] ++;
+				finalOutput = getSymbolFromResult(result);
+
+				
+				int expectedOutputIndex =
+					std::distance(std::begin(result.classifiactionMap),
+					result.classifiactionMap.find(expectedOutput));
+				int finalOutputIndex = 
+					std::distance(std::begin(result.classifiactionMap),
+					result.classifiactionMap.find(finalOutput));
+
+				if (finalOutputIndex < resultMatrix[expectedOutputIndex].size()) {
+
+					resultMatrix[expectedOutputIndex][finalOutputIndex] ++;
+				}
 			}
 		}
 		HandWritingUtils::printResultMatrix(classifierPair.first, resultMatrix);
-		for (int i = 0; i < 10; i++) {
-			for (int j = 0; j < 10; j++) {
+		for (int i = 0; i < resultMatrix.size(); i++) {
+			for (int j = 0; j < resultMatrix[i].size(); j++) {
 				resultMatrix[i][j] = 0;
 			}
 		}
 	}
 
 	for (std::vector<Model*>::iterator it = testModels->begin(); it != testModels->end(); it++) {
-		int expectedOutput = (*it)->getDigit() - '0';
-		int finalOutput;
-		ClassificationResult result;
+		std::string expectedOutput = (*it)->getSymbol();
+		std::string finalOutput;
+		Classification2Result result;
 		result = classifyToResult(*it, false);
-		finalOutput = getDigitFromResult(result) - '0';
-		resultMatrix[expectedOutput][finalOutput] ++;
+		finalOutput = getSymbolFromResult(result);
+		int expectedOutputIndex =
+			std::distance(std::begin(result.classifiactionMap),
+			result.classifiactionMap.find(expectedOutput));
+		int finalOutputIndex =
+			std::distance(std::begin(result.classifiactionMap),
+			result.classifiactionMap.find(finalOutput));
+		
+		if (finalOutputIndex < resultMatrix[expectedOutputIndex].size()) {
+
+			resultMatrix[expectedOutputIndex][finalOutputIndex] ++;
+		}
 	}
 
 

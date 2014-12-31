@@ -6,19 +6,18 @@ class Model
 {
 protected:
 	std::vector<Entity*> *entities;
-	char digit;
-	std::string modelResult;
+	//char digit; // todo - lose digit, move to symbol
+	std::string symbol;
 
 public:
 
 	void normalizeBoundingBox();
 	ci::Rectf getBoundingBox();
-	char getDigit() { return digit; };
-	void setDigit(char aDigit) { digit = aDigit; };
+	//char getDigit() { return digit; };
+	//void setDigit(char aDigit) { digit = aDigit; };
 
-	std::string getModelResult() { return modelResult; };
-	void setModelResult(std::string aModelResult) { modelResult = aModelResult; };
-
+	std::string getSymbol() { return symbol; };
+	void setSymbol(std::string aSymbol) { symbol = aSymbol; };
 
 	std::vector<Entity*> *getEntities() { return entities; };
 	int size();

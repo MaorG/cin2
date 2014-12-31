@@ -20,11 +20,11 @@ void FileManager::setBank(string name)
 void FileManager::writeToBank(Model *model)
 {
 
-	char digit = model->getDigit();
+	std::string symbol = model->getSymbol();
 
 	f.seekp(ios::end);
 	f << "{" << endl;
-	f << "digit: " << digit << endl;
+	f << "digit: " << symbol << endl;
 	f << "count: " << model->size() << endl;
 
 	std::vector<Entity*> * entities = model->getEntities();
@@ -80,7 +80,8 @@ Model * FileManager::pullFromBank()
 
 		char digit = digitString.at(0);
 
-		model->setDigit(digit);
+		//model->setDigit(digit);
+		model->setSymbol(digitString);
 
 		if (word.compare("digit:") == 0 && digitString.size() == 1) {
 			
@@ -232,7 +233,8 @@ Json::Value FileManager::writeDigitToJSONValue(Model* model)
 	Json::Value value;
 
 	value["type"] = "Stroke";
-	value["digit"] = model->getDigit() - '0';
+	//value["digit"] = model->getDigit() - '0';
+	value["digit"] = model->getSymbol();
 
 //	ci::app::console() << value;
 
@@ -317,22 +319,26 @@ std::vector<Model*>* FileManager::getDigitsFromJSONValue(Json::Value value)
 
 Model* FileManager::getSingleDigitFromJSONValue(Json::Value value)
 {
-	Model* digit = new Model();
+	Model* model = new Model();
 
-	std::string digitString;
-	Json::Value digitDigit = value.get("digit", "!");
+	std::string symbolName;
+	Json::Value inputSymbol = value.get("digit", "!");
 
-	digit->setDigit(digitDigit.asUInt()+'0');
+	std::string inputString = inputSymbol.toStyledString();
+	inputString.at(1) = 0;
+
+
+	model->setSymbol(inputString);
 
 	Json::Value JsonPaths = value["paths"];
 
 	for (int index = 0; index < JsonPaths.size(); ++index) {
 		Entity* path = getSingleEntityFromJSONValue(JsonPaths[index]);
 		if (path != NULL) {
-			digit->addEntity(path);
+			model->addEntity(path);
 		}
 	}
-	return digit;
+	return model;
 
 }
 

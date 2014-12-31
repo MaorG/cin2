@@ -28,7 +28,7 @@ Model* ClassifierMinDist::getPreprocessedModel(Model *model) {
 
 	processedModel->addEntity(polyLineEntity);
 //	PolyLineProcessor::orientPolylines((std::vector<PolyLineEntity*>*)processedModel->getEntities());
-	processedModel->setDigit(model->getDigit());
+	processedModel->setSymbol(model->getSymbol());
 	processedModel->normalizeBoundingBox();
 	return processedModel;
 }
@@ -57,7 +57,7 @@ Model* getPreprocessedModelold(Model *model) {
 	first = (PolyLineEntity*)processedModel->getEntityByIndex(0);
 	processedModel->popEntity();
 
-	processedModel->setDigit(model->getDigit());
+	processedModel->setSymbol(model->getSymbol());
 	PolyLineEntity* result = PolyLineProcessor::prepareForNN(first, true, 10/*sampleSize*/);
 	delete first;
 	processedModel->addEntity(result);
@@ -85,11 +85,11 @@ void ClassifierMinDist::test(float ratio)
 	ci::app::console() << endl;
 }
 
-ClassificationResult  ClassifierMinDist::classifyAndPreview(Model * model) {
+Classification2Result  ClassifierMinDist::classifyAndPreview(Model * model) {
 
 	Model * match;
-	ClassificationResult result;
-	std::tuple<ClassificationResult, Model*> resultAndMatch = classifyMinDist(model);
+	Classification2Result result;
+	std::tuple<Classification2Result, Model*> resultAndMatch = classifyMinDist(model);
 
 	Model * temp = getPreprocessedModel(model);
 
@@ -101,7 +101,7 @@ ClassificationResult  ClassifierMinDist::classifyAndPreview(Model * model) {
 	}
 
 	Model * preview = new Model();
-	preview->setDigit(match->getDigit());
+	preview->setSymbol(match->getSymbol());
 
 	Entity * modelEntity = temp->getEntityByIndex(0);
 	Entity * matchEntity = match->getEntityByIndex(0);
@@ -119,17 +119,17 @@ ClassificationResult  ClassifierMinDist::classifyAndPreview(Model * model) {
 	return result;
 }
 
-ClassificationResult ClassifierMinDist::classify(Model * model)
+Classification2Result ClassifierMinDist::classify(Model * model)
 {
 	return std::get<0>(classifyMinDist(model));
 }
 
-std::tuple<ClassificationResult, Model*>  ClassifierMinDist::classifyMinDist(Model * model)
+std::tuple<Classification2Result, Model*>  ClassifierMinDist::classifyMinDist(Model * model)
 {
 
-	ClassificationResult result = std::vector <float>(10);
+	Classification2Result result;
 
-	std::tuple<ClassificationResult, Model*> resultAndMatch;
+	std::tuple<Classification2Result, Model*> resultAndMatch;
 
 	Model * match = NULL;
 	if (trainingModels.size() == 0) {
@@ -140,18 +140,21 @@ std::tuple<ClassificationResult, Model*>  ClassifierMinDist::classifyMinDist(Mod
 
 
 
-	float minDist = 1000;
-	char digit = '?';
-	
-	for (int i = 0; i < 10; i++) {
-		result[i] = INFINITY;
-	}
+	float minDist = INFINITY;
+	std::string symbol = "?";
+
+	result.classifiactionMap.clear();
 
 	for (std::vector<Model*>::iterator it = trainingModels.begin(); it != trainingModels.end(); it++){
 		float dist = getDistanceBetweenModels(processedInputModel, *it);
-		int digitIndex = (*it)->getDigit()-'0';
-		if (dist < result[digitIndex]) {
-			result[digitIndex] = dist;
+		std::string matchSymbol = (*it)->getSymbol();
+
+		if (result.classifiactionMap.find(matchSymbol) == result.classifiactionMap.end()) {
+			result.classifiactionMap.insert(std::pair<std::string, float>(matchSymbol, dist));
+		}
+
+		if (dist < result.classifiactionMap[matchSymbol]) {
+			result.classifiactionMap[matchSymbol] = dist;
 		}
 
 		if (dist < minDist) {
@@ -160,8 +163,11 @@ std::tuple<ClassificationResult, Model*>  ClassifierMinDist::classifyMinDist(Mod
 		}
 	}
 
-	for (int i = 0; i < 10; i++) {
-		result[i] *= -1.0f;
+
+	// converting "cost" to "score"
+	for (std::map<std::string, float>::iterator it = result.classifiactionMap.begin(); 
+		it != result.classifiactionMap.end(); ++it) {
+		(*it).second *= -1.0f;
 	}
 
 	resultAndMatch = std::make_tuple(result, match);

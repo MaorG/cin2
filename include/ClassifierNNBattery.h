@@ -11,6 +11,9 @@ class Classifier;
 class ClassifierNNBattery : public Classifier
 {
 protected:
+	std::map<std::string, int> symbolIndices;
+
+
 	std::vector<std::vector <float>> trainingInput;
 	std::vector<std::vector<float>> trainingOutput;
 
@@ -24,7 +27,7 @@ protected:
 	int m_sampleSize;
 	struct fann* ann = NULL;
 
-	std::vector<struct fann*> fannBattery;
+	std::map<std::string, struct fann*> fannBattery;
 
 	std::vector <float> convertEntityToInputVector(Entity * entity);
 	std::vector <float> convertModelToInputVector(Model * model); 
@@ -33,7 +36,7 @@ protected:
 	fann_type ** convertTrainingInputToVectors();
 	fann_type ** convertTrainingOutputToVectors(int digitIndex);
 	
-	ClassificationResult classifyBattery(Model * model);
+	Classification2Result classifyBattery(Model * model);
 	void setInputVectorSize(int inputVectorSize_) { m_inputVectorSize = inputVectorSize_; };
 	void setSampleSize(int sampleSize_) { m_sampleSize = sampleSize_; };
 
@@ -50,8 +53,8 @@ public:
 	void prepareTrainingData(std::vector<Model*> * inputModels);
 	void train();
 	void test(float ratio);
-	ClassificationResult classify(Model * model);
-	ClassificationResult classifyAndPreview(Model * model) {
+	Classification2Result classify(Model * model);
+	Classification2Result classifyAndPreview(Model * model) {
 		return classify(model);
 	};
 
