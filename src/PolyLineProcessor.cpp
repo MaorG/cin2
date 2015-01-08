@@ -28,7 +28,7 @@ PolyLineEntity* PolyLineProcessor::unitePolyLines(std::vector<PolyLineEntity*> *
 
 	float lengthSum = 0;
 
-	for each (auto entity in *entities) {
+	for (auto entity : *entities) {
 		polyLines.push_back(entity->getObject());
 		float length = calcLength(entity->getObject());
 		lengths.push_back(length);
@@ -70,26 +70,14 @@ PolyLineEntity* PolyLineProcessor::unitePolyLines(std::vector<PolyLineEntity*> *
 
 }
 
-std::pair<bool, bool> getPolyLinesPairOrientations(PolyLineEntity* firstEntity, PolyLineEntity* secondEntity)
+std::pair<bool, bool> getPolyLinesPairOrientationsByEndpoints(Vec2f a1, Vec2f a2, Vec2f b1,	Vec2f b2)
 {
-	PolyLine2f * first = firstEntity->getObject();
-	PolyLine2f * second = secondEntity->getObject();
-
-	if (first->size() <= 1) {
-		firstEntity->concat(secondEntity);
-		return std::pair<bool, bool>(false, false);
-	}
-
-	if (second->size() <= 0) {
-		return std::pair<bool, bool>(false, false);
-	}
-
 	float gaps[4];
 
-	gaps[0] = (*(first->begin()) - *(second->begin())).length();
-	gaps[1] = (*(first->begin()) - *(second->end() - 1)).length();
-	gaps[2] = (*(first->end() - 1) - *(second->begin())).length();
-	gaps[3] = (*(first->end() - 1) - *(second->end() - 1)).length();
+	gaps[0] = (a1 - b1).length();
+	gaps[1] = (a1 - b2).length();
+	gaps[2] = (a2 - b1).length();
+	gaps[3] = (a2 - b2).length();
 
 	int minGapIndex = 0;
 	float minGap = gaps[0];
@@ -107,8 +95,33 @@ std::pair<bool, bool> getPolyLinesPairOrientations(PolyLineEntity* firstEntity, 
 
 }
 
-void PolyLineProcessor::orientPolylines(std::vector<PolyLineEntity*> * entities)
+std::pair<bool, bool> getPolyLinesPairOrientations(PolyLineEntity* firstEntity, PolyLineEntity* secondEntity)
 {
+	PolyLine2f * first = firstEntity->getObject();
+	PolyLine2f * second = secondEntity->getObject();
+
+	if (first->size() <= 0) {
+		return std::pair<bool, bool>(false, false);
+	}
+
+	if (second->size() <= 0) {
+		return std::pair<bool, bool>(false, false);
+	}
+
+	return getPolyLinesPairOrientationsByEndpoints(
+		*(first->begin()), *(first->end() - 1),
+		*(second->begin()), *(second->end() - 1));
+}
+
+void PolyLineProcessor::orientPolylines(std::vector<PolyLineEntity*> * entities)
+{ 
+	std::vector<int> reversals = std::vector<int>(entities->size());
+	for (int i = 0; i < entities->size(); i++) {
+		reversals[i] = 0;
+	}
+	for (int i = 0; i < entities->size(); i++) {
+		reversals[i] = 0;
+	}
 
 }
 

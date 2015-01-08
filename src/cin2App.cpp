@@ -229,7 +229,7 @@ void cin2App::trainClassifier()
 void cin2App::testClassifier(float ratio)
 {
 	getTrainingDataFromFile();
-	handWritingManager->setExampleModels("NN", &trainingModel[0]);
+//	handWritingManager->setExampleModels("NN", &trainingModel[0]);
 	handWritingManager->setExampleModels("MinDist", &trainingModel[0]);
 	handWritingManager->setExampleModels("Dynamic", &trainingModel[0]);
 	handWritingManager->setTestModels(&testingModel);
@@ -273,7 +273,7 @@ void cin2App::mouseDrag(MouseEvent event)
 		anglesModel->popEntity();
 	}
 	delete processedEntity;
-	processedModel = handWritingManager->getPreprocessedModel("NN", inputModel);
+	processedModel = handWritingManager->getPreprocessedModel("MinDist", inputModel);
 	context->putModelInWindowByIndex(1, processedModel);
 	//context->putModelInWindowByIndex(3, processedModel);
 	anglesModel->addEntity(anglesEntity);

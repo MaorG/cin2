@@ -280,43 +280,37 @@ void HandWritingManager::test()
 
 	resultMatrix.resize(symbolIndices.size(), std::vector<int>(symbolIndices.size(), 0));
 
-
-
-
 	for each (auto classifierPair in classifiers) {
 		Classifier * classifier = classifierPair.second;
 		for (std::vector<Model*>::iterator it = testModels->begin(); it != testModels->end(); it++) {
 			std::string expectedOutput = (*it)->getSymbol();
 			std::string finalOutput;
 			Classification2Result result;
-			for each (auto classifierPair in classifiers) {
 
-				Classifier * classifier = classifierPair.second;
-				result = classifier->classify(*it);
-				finalOutput = getSymbolFromResult(result);
+			result = classifier->classify(*it);
+			finalOutput = getSymbolFromResult(result);
 
 				
-				int expectedOutputIndex =
-					std::distance(std::begin(result.classifiactionMap),
-					result.classifiactionMap.find(expectedOutput));
-				int finalOutputIndex = 
-					std::distance(std::begin(result.classifiactionMap),
-					result.classifiactionMap.find(finalOutput));
+			int expectedOutputIndex =
+			std::distance(std::begin(result.classifiactionMap),
+				result.classifiactionMap.find(expectedOutput));
+			int finalOutputIndex = 
+				std::distance(std::begin(result.classifiactionMap),
+				result.classifiactionMap.find(finalOutput));
 
-				if (finalOutputIndex < resultMatrix[expectedOutputIndex].size()) {
-
-					resultMatrix[expectedOutputIndex][finalOutputIndex] ++;
-				}
+			if (finalOutputIndex < resultMatrix[expectedOutputIndex].size()) {
+				resultMatrix[expectedOutputIndex][finalOutputIndex] ++;
 			}
 		}
 		HandWritingUtils::printResultMatrix(classifierPair.first, resultMatrix);
+
 		for (int i = 0; i < resultMatrix.size(); i++) {
 			for (int j = 0; j < resultMatrix[i].size(); j++) {
 				resultMatrix[i][j] = 0;
 			}
 		}
 	}
-
+	
 	for (std::vector<Model*>::iterator it = testModels->begin(); it != testModels->end(); it++) {
 		std::string expectedOutput = (*it)->getSymbol();
 		std::string finalOutput;

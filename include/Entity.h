@@ -13,7 +13,7 @@ public:
 	virtual void move(ci::Vec2f movement) = 0;
 	char getDigit() { return digit; };
 	void setDigit(char aDigit) { digit = aDigit; };
-	virtual Entity * clone() = 0;
+	virtual Entity * clone() { return NULL; };
 	virtual void setColor(ci::Color color) = 0;
 
 	virtual ~Entity(){};
