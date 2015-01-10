@@ -66,7 +66,6 @@ Model* HandWritingManager::getPreprocessedModel(std::string classifierName, Mode
 	std::map<std::string, Classifier*>::iterator it = classifiers.find(classifierName);
 
 	if (it == classifiers.end()) {
-		
 		it = classifiers.begin();
 	}
 	Classifier * classifier = it->second;

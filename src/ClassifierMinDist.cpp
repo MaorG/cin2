@@ -201,18 +201,28 @@ float ClassifierMinDist::getDistanceBetweenModels(Model * first, Model * second)
 	float lengthFirst = PolyLineProcessor::calcLength(firstPolyLine);
 	float lengthSecond = PolyLineProcessor::calcLength(secondPolyLine);
 
-		//  todo - use actual points  (?)
+	//  todo - use actual points  (?)
 
 	float totalDist = 0.0f;
 
+	for (int i = 0; i < firstPolyLine->size(); i++) {
+		totalDist += (
+			firstPolyLine->getPoints().at(i) -
+			secondPolyLine->getPoints().at(i)
+			).length();
+	}
+
+	// when #points is not the same..
+	/*
 	for (float tRel = 0.0f; tRel <= 1.0f; tRel += 0.1) {
+
+
 		totalDist += (
 			firstPolyLine->getPosition(tRel * lengthFirst) -
 			secondPolyLine->getPosition(tRel * lengthSecond)
 			).length();
 	}
-	// todo - calc area
-	//first->addEntity(secondEntity);
+	*/
 	
 	return totalDist;
 }

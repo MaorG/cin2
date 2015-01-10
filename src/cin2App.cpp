@@ -233,6 +233,10 @@ void cin2App::mouseUp(MouseEvent event)
 	//classifier.classify(&inputModel);
 	//classifier.classifyArray(inputModel);
 	int a = 0;
+
+	processedModel = handWritingManager->getPreprocessedModel("MinDist", inputModel);
+	context->putModelInWindowByIndex(1, processedModel);
+
 }
 
 void cin2App::mouseDrag(MouseEvent event)
@@ -244,21 +248,20 @@ void cin2App::mouseDrag(MouseEvent event)
 
 
 	// todo: give this a name, put in in a function with a parameter function. probabaly there's a pattern for this
-	PolyLineEntity* Last = (PolyLineEntity*)(inputModel->getEntityByIndex(inputModel->size() - 1));
+	//PolyLineEntity* Last = (PolyLineEntity*)(inputModel->getEntityByIndex(inputModel->size() - 1));
 
-	PolyLineEntity* processedEntity = PolyLineProcessor::prepareForNN(Last, true, SAMPLE_SIZE);
-	PolyLineEntity* anglesEntity = PolyLineProcessor::process2(processedEntity);
+	//PolyLineEntity* processedEntity = PolyLineProcessor::prepareForNN(Last, true, SAMPLE_SIZE);
+	//PolyLineEntity* anglesEntity = PolyLineProcessor::process2(processedEntity);
 
-	if (!pressed) {
-		//processedModel->popEntity();
-		anglesModel->popEntity();
-	}
-	delete processedEntity;
-	processedModel = handWritingManager->getPreprocessedModel("MinDist", inputModel);
-	context->putModelInWindowByIndex(1, processedModel);
-	//context->putModelInWindowByIndex(3, processedModel);
-	anglesModel->addEntity(anglesEntity);
-	pressed = false;
+	//if (!pressed) {
+	//	anglesModel->popEntity();
+	//}
+	//delete processedEntity;
+	//processedModel = handWritingManager->getPreprocessedModel("MinDist", inputModel);
+	//context->putModelInWindowByIndex(1, processedModel);
+
+	//anglesModel->addEntity(anglesEntity);
+	//pressed = false;
 	
 }
 

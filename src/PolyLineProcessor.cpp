@@ -48,8 +48,8 @@ PolyLineEntity* PolyLineProcessor::unitePolyLines(std::vector<PolyLineEntity*> *
 			currentEntityIndex++;
 		}
 
-//		Vec2f point = pointAlongPolyLine(polyLines[currentEntityIndex], lengthInEntity);
-		Vec2f point = polyLines[currentEntityIndex]->getPosition(lengthInEntity / lengths[currentEntityIndex]);
+		Vec2f point = pointAlongPolyLine(polyLines[currentEntityIndex], lengthInEntity);
+//		Vec2f point = polyLines[currentEntityIndex]->getPosition(lengthInEntity / lengths[currentEntityIndex]);
 
 		result->push_back(point);
 
@@ -140,6 +140,9 @@ void PolyLineProcessor::orientPolylines(std::vector<PolyLineEntity*> * entities)
 
 		if (pairReversals.first) {
 			for (int j = 0; j < i; j++) {
+				PolyLineEntity* temp = entities->at(j);
+				entities->at(j) = entities->at(i - j - 1);
+				entities->at(i - j - 1) = temp;
 				reversals[j] = !reversals[j];
 			}
 			headStart = headEnd;
@@ -444,21 +447,22 @@ Vec2f PolyLineProcessor::pointAlongPolyLine(PolyLine2f* polyLine, float along)
 	if (along <= 0 || polyLine->size() < 2) {
 		return *polyLine->begin();
 	}
+
 	float accumulatedDist = 0;
 
-	for (std::vector<Vec2f>::iterator it = polyLine->begin(); it != polyLine->end() - 1; it++) {
-		float dist = (Vec2f(it->x, it->y) - Vec2f((it + 1)->x, (it + 1)->y)).length();
-		if (accumulatedDist + dist == along) {
+	for (std::vector<Vec2f>::iterator it = polyLine->begin()+1; it != polyLine->end(); it++) {
+		Vec2f d = Vec2f(*it - *(it-1));
+		float segmentLength = d.length();
+
+		if (accumulatedDist + segmentLength == along) {
 			return (*it);
 		}
-		else if (accumulatedDist + dist > along) {
+		else if (accumulatedDist + segmentLength > along) {
 			float remainder = along - accumulatedDist;
 
-			Vec2f d = Vec2f(*it - *(it+1));
-			float segmentLength = d.length();
 			if (segmentLength > 0) {
 
-				Vec2f v = *it + d * (remainder / segmentLength);
+				Vec2f v = *(it-1) + d * (remainder / segmentLength);
 
 				if (remainder / segmentLength > 1) {
 					int a = 0;
@@ -467,7 +471,7 @@ Vec2f PolyLineProcessor::pointAlongPolyLine(PolyLine2f* polyLine, float along)
 			}
 		}
 		else {
-			accumulatedDist += dist;
+			accumulatedDist += segmentLength;
 		}
 	}
 
