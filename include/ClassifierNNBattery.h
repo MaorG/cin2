@@ -36,7 +36,7 @@ protected:
 	fann_type ** convertTrainingInputToVectors();
 	fann_type ** convertTrainingOutputToVectors(int digitIndex);
 	
-	Classification2Result classifyBattery(Model * model);
+	ClassificationResult classifyBattery(Model * model);
 	void setInputVectorSize(int inputVectorSize_) { m_inputVectorSize = inputVectorSize_; };
 	void setSampleSize(int sampleSize_) { m_sampleSize = sampleSize_; };
 
@@ -53,8 +53,8 @@ public:
 	void prepareTrainingData(std::vector<Model*> * inputModels);
 	void train();
 	void test(float ratio);
-	Classification2Result classify(Model * model);
-	Classification2Result classifyAndPreview(Model * model) {
+	ClassificationResult classify(Model * model);
+	ClassificationResult classifyAndPreview(Model * model) {
 		return classify(model);
 	};
 

@@ -17,7 +17,7 @@ protected:
 	AppContext * context;
 	std::map<std::string, Classifier*> classifiers;
 	std::vector<Model*> * testModels;
-	Classification2Result classifyToResult(Model * model, bool preview);
+	ClassificationResult classifyToResult(Model * model, bool preview);
 
 	int getBestPrefixSizeInSuffix(Model* model, int startIndex);
 

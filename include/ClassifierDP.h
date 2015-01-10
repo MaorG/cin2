@@ -13,7 +13,7 @@ class ClassifierDP : public Classifier
 protected:
 	std::vector<Model*> trainingModels;
 
-	std::tuple<Classification2Result, Model*> classifyDP(Model * model);
+	std::tuple<ClassificationResult, Model*> classifyDP(Model * model);
 
 	float getSequenceAlignScore(std::vector<float> A, std::vector<float> B);
 	std::vector<float> getSequenceFromModel(Model * model);
@@ -41,8 +41,8 @@ public:
 	void prepareTrainingData(std::vector<Model*> * inputModels);
 	void train(){};
 	void test(float ratio){};
-	Classification2Result classify(Model * model);
-	Classification2Result classifyAndPreview(Model * model);
+	ClassificationResult classify(Model * model);
+	ClassificationResult classifyAndPreview(Model * model);
 
 };
 

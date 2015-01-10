@@ -3,7 +3,7 @@
 #include "AppContext.h"
 #include "Model.h"
 
-struct Classification2Result
+struct ClassificationResult
 {
 	std::map<std::string, float> classifiactionMap;
 	std::string resultSymbol;
@@ -27,8 +27,8 @@ public:
 	virtual void prepareTrainingData(std::vector<Model*> * inputModels) = 0;	
 	virtual void train() = 0;
 	virtual void test(float ratio) = 0;
-	virtual Classification2Result classify(Model * model) = 0;
-	virtual Classification2Result classifyAndPreview(Model * model) = 0;
+	virtual ClassificationResult classify(Model * model) = 0;
+	virtual ClassificationResult classifyAndPreview(Model * model) = 0;
 
 };
 

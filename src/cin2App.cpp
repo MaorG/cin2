@@ -118,25 +118,6 @@ void cin2App::keyDown(KeyEvent event)
 		break;
 	case 'l':
 		clearModels();
-
-		//if (trainingModel[0].size() > index) {
-
-		//	inputModel = trainingModel[1].at(index++);
-		//	{
-		//		std::vector<Entity*> *entities = inputModel->getEntities();
-		//		for (std::vector<Entity*>::iterator it = entities->begin(); it != entities->end(); it++) {
-		//			if ((*it)->isPolyLineEntity()) {
-		//				PolyLineEntity* processedEntity = PolyLineProcessor::prepareForNN((PolyLineEntity*)*it, true, SAMPLE_SIZE);
-		//				processedModel->addEntity(processedEntity);
-		//				PolyLineEntity* anglesEntity = PolyLineProcessor::process2(processedEntity);
-		//				anglesModel->addEntity(anglesEntity);
-		//			}
-		//		}
-		//	}
-		//}
-		//else {
-		//	index = 0;
-		//}
 		break;
 	case 't':
 		trainClassifier();

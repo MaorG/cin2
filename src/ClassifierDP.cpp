@@ -12,30 +12,16 @@ using namespace std;
 
 Model* ClassifierDP::getPreprocessedModel(Model *model) {
 	Model * processedModel = new Model();
-	 
+
 	std::vector<Entity*> * entities = model->getEntities();
 
-	//isPolyLineEntity
-	PolyLineEntity* first = ((PolyLineEntity*)*(entities->begin()))->clone();
-	
-	
-	for (std::vector<Entity*>::iterator it = entities->begin()+1; it != entities->end(); ++it) {
+	PolyLineProcessor::orientPolylines((std::vector<PolyLineEntity*>*)entities);
 
-		if ((*it)->isPolyLineEntity()) {
-			PolyLineEntity* polyLineEntity = (PolyLineEntity*)(*it);
-			PolyLineProcessor::chainPolyLines(first, polyLineEntity);
-		}
-	}
+	PolyLineEntity* polyLineEntity = PolyLineProcessor::unitePolyLines((std::vector<PolyLineEntity*>*)entities, sampleSize);
 
-	processedModel->addEntity(first);
-	//processedModel->normalizeBoundingBox();
-	first = (PolyLineEntity*)processedModel->getEntityByIndex(0);
-	processedModel->popEntity();
-
+	processedModel->addEntity(polyLineEntity);
 	processedModel->setSymbol(model->getSymbol());
-	PolyLineEntity* result = PolyLineProcessor::prepareForNN(first, true, sampleSize);
-	delete first;
-	processedModel->addEntity(result);
+	processedModel->normalizeBoundingBox();
 	return processedModel;
 }
 
@@ -49,11 +35,11 @@ void ClassifierDP::prepareTrainingData(std::vector<Model*> * inputModels)
 }
 
 
-Classification2Result ClassifierDP::classifyAndPreview(Model * model)
+ClassificationResult ClassifierDP::classifyAndPreview(Model * model)
 {
 	Model * match;
-	Classification2Result result;
-	std::tuple<Classification2Result, Model*> resultAndMatch = classifyDP(model);
+	ClassificationResult result;
+	std::tuple<ClassificationResult, Model*> resultAndMatch = classifyDP(model);
 
 	Model * temp = getPreprocessedModel(model);
 
@@ -108,17 +94,17 @@ Classification2Result ClassifierDP::classifyAndPreview(Model * model)
 
 }
 
-Classification2Result ClassifierDP::classify(Model * model) {
+ClassificationResult ClassifierDP::classify(Model * model) {
 	return std::get<0>(classifyDP(model));
 }
 
 
-std::tuple<Classification2Result, Model*> ClassifierDP::classifyDP(Model * model)
+std::tuple<ClassificationResult, Model*> ClassifierDP::classifyDP(Model * model)
 {
 
-	Classification2Result result;
+	ClassificationResult result;
 
-	std::tuple<Classification2Result, Model*> resultAndMatch;
+	std::tuple<ClassificationResult, Model*> resultAndMatch;
 
 	Model * match = NULL;
 	if (trainingModels.size() == 0) {

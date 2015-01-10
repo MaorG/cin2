@@ -16,18 +16,12 @@ Model* ClassifierMinDist::getPreprocessedModel(Model *model) {
 	Model * processedModel = new Model();
 	 
 	std::vector<Entity*> * entities = model->getEntities();
-	
-	//for (std::vector<Entity*>::iterator it = entities->begin(); it != entities->end(); ++it) {
-	//	if ((*it)->isPolyLineEntity()) {
-	//		PolyLineEntity* polyLineEntity = (PolyLineEntity*)(*it)->clone();
-	//		processedModel->addEntity(polyLineEntity);
-	//	}
-	//}
 
+	PolyLineProcessor::orientPolylines((std::vector<PolyLineEntity*>*)entities);
+	
 	PolyLineEntity* polyLineEntity = PolyLineProcessor::unitePolyLines((std::vector<PolyLineEntity*>*)entities, sampleSize);
 
 	processedModel->addEntity(polyLineEntity);
-//	PolyLineProcessor::orientPolylines((std::vector<PolyLineEntity*>*)processedModel->getEntities());
 	processedModel->setSymbol(model->getSymbol());
 	processedModel->normalizeBoundingBox();
 	return processedModel;
@@ -85,11 +79,11 @@ void ClassifierMinDist::test(float ratio)
 	ci::app::console() << endl;
 }
 
-Classification2Result  ClassifierMinDist::classifyAndPreview(Model * model) {
+ClassificationResult  ClassifierMinDist::classifyAndPreview(Model * model) {
 
 	Model * match;
-	Classification2Result result;
-	std::tuple<Classification2Result, Model*> resultAndMatch = classifyMinDist(model);
+	ClassificationResult result;
+	std::tuple<ClassificationResult, Model*> resultAndMatch = classifyMinDist(model);
 
 	Model * temp = getPreprocessedModel(model);
 
@@ -119,17 +113,17 @@ Classification2Result  ClassifierMinDist::classifyAndPreview(Model * model) {
 	return result;
 }
 
-Classification2Result ClassifierMinDist::classify(Model * model)
+ClassificationResult ClassifierMinDist::classify(Model * model)
 {
 	return std::get<0>(classifyMinDist(model));
 }
 
-std::tuple<Classification2Result, Model*>  ClassifierMinDist::classifyMinDist(Model * model)
+std::tuple<ClassificationResult, Model*>  ClassifierMinDist::classifyMinDist(Model * model)
 {
 
-	Classification2Result result;
+	ClassificationResult result;
 
-	std::tuple<Classification2Result, Model*> resultAndMatch;
+	std::tuple<ClassificationResult, Model*> resultAndMatch;
 
 	Model * match = NULL;
 	if (trainingModels.size() == 0) {

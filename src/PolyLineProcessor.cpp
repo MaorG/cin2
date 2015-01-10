@@ -34,7 +34,7 @@ PolyLineEntity* PolyLineProcessor::unitePolyLines(std::vector<PolyLineEntity*> *
 		lengths.push_back(length);
 		lengthSum += length;
 	}
-	float segmentLength = lengthSum / (pointAmount - 1);
+	float segmentLength = lengthSum / (float)(pointAmount - 1);
 	float lengthInEntity = 0;
 
 	int currentEntityIndex = 0;
@@ -46,12 +46,11 @@ PolyLineEntity* PolyLineProcessor::unitePolyLines(std::vector<PolyLineEntity*> *
 		while (lengthInEntity > lengths[currentEntityIndex]) {
 			lengthInEntity -= lengths[currentEntityIndex];
 			currentEntityIndex++;
-			if (currentEntityIndex == polyLines.size()) {
-				pointAlongPolyLine(polyLines[currentEntityIndex], lengthInEntity);
-			}
 		}
 
-		Vec2f point = pointAlongPolyLine(polyLines[currentEntityIndex], lengthInEntity);
+//		Vec2f point = pointAlongPolyLine(polyLines[currentEntityIndex], lengthInEntity);
+		Vec2f point = polyLines[currentEntityIndex]->getPosition(lengthInEntity / lengths[currentEntityIndex]);
+
 		result->push_back(point);
 
 		lengthInEntity += segmentLength;
@@ -115,12 +114,49 @@ std::pair<bool, bool> getPolyLinesPairOrientations(PolyLineEntity* firstEntity, 
 
 void PolyLineProcessor::orientPolylines(std::vector<PolyLineEntity*> * entities)
 { 
-	std::vector<int> reversals = std::vector<int>(entities->size());
-	for (int i = 0; i < entities->size(); i++) {
-		reversals[i] = 0;
+	if (entities->size() < 2) {
+		return;
 	}
+	if ((*entities)[0]->getObject()->size() == 0) {
+		return;
+	}
+
+	std::vector<bool> reversals = std::vector<bool>(entities->size());
 	for (int i = 0; i < entities->size(); i++) {
-		reversals[i] = 0;
+		reversals[i] = false;
+	}
+
+	Vec2f headStart = *(*entities)[0]->getObject()->begin();
+	Vec2f headEnd = *((*entities)[0]->getObject()->end()-1);
+	for (int i = 1; i < entities->size(); i++) {
+		if ((*entities)[i]->getObject()->size() == 0) {
+			continue;
+		}
+		Vec2f tailStart = *(*entities)[i]->getObject()->begin();
+		Vec2f tailEnd = *((*entities)[i]->getObject()->end() - 1);
+
+		auto pairReversals = getPolyLinesPairOrientationsByEndpoints(
+			headStart, headEnd, tailStart, tailEnd);
+
+		if (pairReversals.first) {
+			for (int j = 0; j < i; j++) {
+				reversals[j] = !reversals[j];
+			}
+			headStart = headEnd;
+		}
+
+		if (pairReversals.second) {
+			reversals[i] = !reversals[i];
+			tailEnd = tailStart;
+		}
+
+		headEnd = tailEnd;
+	}
+
+	for (int i = 0; i < entities->size(); i++) {
+		if (reversals[i]){
+			reverse((*entities)[i]);
+		}
 	}
 
 }
@@ -409,6 +445,7 @@ Vec2f PolyLineProcessor::pointAlongPolyLine(PolyLine2f* polyLine, float along)
 		return *polyLine->begin();
 	}
 	float accumulatedDist = 0;
+
 	for (std::vector<Vec2f>::iterator it = polyLine->begin(); it != polyLine->end() - 1; it++) {
 		float dist = (Vec2f(it->x, it->y) - Vec2f((it + 1)->x, (it + 1)->y)).length();
 		if (accumulatedDist + dist == along) {

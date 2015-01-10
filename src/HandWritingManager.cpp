@@ -1,6 +1,6 @@
 #include "HandWritingManager.h"
 
-std::string getSymbolFromResult(Classification2Result result) 
+std::string getSymbolFromResult(ClassificationResult result) 
 {
 	std::string output;
 	float max = -INFINITY;
@@ -73,17 +73,17 @@ Model* HandWritingManager::getPreprocessedModel(std::string classifierName, Mode
 	return classifier->getPreprocessedModel(model);
 }
 
-Classification2Result HandWritingManager::classifyToResult(Model * model, bool preview)
+ClassificationResult HandWritingManager::classifyToResult(Model * model, bool preview)
 {
-	Classification2Result result;
-	std::vector <Classification2Result> resultVector;
+	ClassificationResult result;
+	std::vector <ClassificationResult> resultVector;
 
 	for (std::map<std::string, Classifier*>::iterator it = classifiers.begin();
 		it != classifiers.end(); ++it) {
 
 		Classifier * classifier = it->second;
 
-		Classification2Result classifierResult;
+		ClassificationResult classifierResult;
 		if (!preview) {
 			classifierResult = classifier->classify(model);
 		}
@@ -135,7 +135,7 @@ Classification2Result HandWritingManager::classifyToResult(Model * model, bool p
 
 void HandWritingManager::classify(Model * model, bool preview)
 {
-	Classification2Result result = classifyToResult(model, preview);
+	ClassificationResult result = classifyToResult(model, preview);
 	model->setSymbol(getSymbolFromResult(result));
 }
 
@@ -285,7 +285,7 @@ void HandWritingManager::test()
 		for (std::vector<Model*>::iterator it = testModels->begin(); it != testModels->end(); it++) {
 			std::string expectedOutput = (*it)->getSymbol();
 			std::string finalOutput;
-			Classification2Result result;
+			ClassificationResult result;
 
 			result = classifier->classify(*it);
 			finalOutput = getSymbolFromResult(result);
@@ -314,7 +314,7 @@ void HandWritingManager::test()
 	for (std::vector<Model*>::iterator it = testModels->begin(); it != testModels->end(); it++) {
 		std::string expectedOutput = (*it)->getSymbol();
 		std::string finalOutput;
-		Classification2Result result;
+		ClassificationResult result;
 		result = classifyToResult(*it, false);
 		finalOutput = getSymbolFromResult(result);
 		int expectedOutputIndex =

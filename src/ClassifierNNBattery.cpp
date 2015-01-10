@@ -276,13 +276,13 @@ void ClassifierNNBattery::test(float ratio)
 	*/
 }
 
-Classification2Result ClassifierNNBattery::classify(Model * model) {
+ClassificationResult ClassifierNNBattery::classify(Model * model) {
 	return classifyBattery(model);
 }
 
-Classification2Result ClassifierNNBattery::classifyBattery(Model * model) {
+ClassificationResult ClassifierNNBattery::classifyBattery(Model * model) {
 
-	Classification2Result result;
+	ClassificationResult result;
 
 	//if (fannBattery.size() < 10) {
 	//	return result;
